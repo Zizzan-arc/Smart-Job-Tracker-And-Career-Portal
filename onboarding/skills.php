@@ -1,8 +1,10 @@
+
 <?php
+
 session_start();
 include '../Database.php';
 
-// Check if user is logged in from registration
+// Check if the same user is logged in from registration
 if (!isset($_SESSION['current_user_id'])) {
     header('Location: ../registration/register.html');
     exit;
@@ -13,16 +15,22 @@ $userId = $_SESSION['current_user_id'];
 // Fetch all skills from Skill table
 $sql = "SELECT Skill_ID, Skill_name FROM Skill";
 $result = $conn->query($sql);
-$skills = [];
+
+// storing the skills from database into an array (basically importing the skills so that I can use in the HTML part)
+$skillsarray = [];
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $skills[] = $row;
+        $skillsarray[] = $row;
     }
+} else {
+    echo "No skills found in the database.";
+    
+    exit;
 }
-
-$conn->close();
 ?>
+
+<!-- HTML PART -->
 
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
@@ -56,7 +64,8 @@ $conn->close();
             <form id="skillsForm" action="save_skills.php" method="POST" class="space-y-6">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <?php foreach ($skills as $skill): ?>
+                    <!-- PHP for each loop -->
+                    <?php foreach ($skillsarray as $skill): ?>
                     <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-700/60 transition-colors duration-200">
                         <input type="checkbox" name="selected_skills[]" value="<?php echo $skill['Skill_ID']; ?>" 
                             class="checkbox checkbox-sm checkbox-primary border-slate-600" />

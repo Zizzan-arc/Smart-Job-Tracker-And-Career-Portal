@@ -11,18 +11,17 @@ if (!isset($_SESSION['current_user_id'])) {
 $userId = $_SESSION['current_user_id'];
 
 // Get selected skills from form
-$selectedSkills = $_POST['selected_skills'] ?? [];
-
+$selectedSkills = $_POST['selected_skills'] ; 
+// this empty function checks the selectedSkills is empty or not
 if (empty($selectedSkills)) {
     echo "<script>
         alert('Error: Please select at least one skill.');
         window.location.href = 'skills.php';
     </script>";
-    $conn->close();
     exit;
 }
 
-// Insert each selected skill into Has_Skill table
+// Insert into Has_Skill table
 $insertedCount = 0;
 foreach ($selectedSkills as $skillId) {
     $skillId = intval($skillId); // Sanitize
@@ -44,5 +43,5 @@ if ($insertedCount > 0) {
     </script>";
 }
 
-$conn->close();
+
 ?>
