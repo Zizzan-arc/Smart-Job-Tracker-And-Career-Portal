@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const roleRadios = document.querySelectorAll('input[name="user_role"]');
 
   // Select the form-control divs for GitHub and Experience fields
-  const githubField = document.querySelector('label[for="githubUrl"]').parentElement;
-  const experienceField = document.querySelector('label[for="experience"]').parentElement;
+  const githubField = document.getElementById('githubSection');
+  const experienceField = document.getElementById('experienceSection');
 
   const firstNameInput = document.getElementById('firstName');
   const lastNameInput = document.getElementById('lastName');
@@ -23,16 +23,24 @@ document.addEventListener('DOMContentLoaded', () => {
         experienceField.classList.add('hidden'); // Hide Experience for Admins
       } else {
         githubField.classList.remove('hidden'); // Show for Applicants
+        experienceField.classList.remove('hidden'); // Show Experience for Applicants
       }
     });
   });
 
-  // --- Password Visibility Toggle ---
+
+   // passowrd visibility
   showPasswordCheckbox.addEventListener('change', () => {
-    const type = showPasswordCheckbox.checked ? 'text' : 'password';
-    passwordInput.type = type;
-    confirmPasswordInput.type = type;
+    if (showPasswordCheckbox.checked) {
+      passwordInput.type = 'text';
+      confirmPasswordInput.type = 'text';
+    } else {
+      // hides the password
+      passwordInput.type = 'password';
+      confirmPasswordInput.type = 'password';
+    }
   });
+
 
   // --- Helper Functions ---
   const isValidEmail = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
@@ -44,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
   };
+
+  // Arrow Functions for showing/hiding errors
   const showError = (el) => el.classList.remove('hidden');
   const hideError = (el) => el.classList.add('hidden');
 

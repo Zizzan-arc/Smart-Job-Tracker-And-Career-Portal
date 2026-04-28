@@ -10,15 +10,15 @@ $last_name = $_POST['last_name'];
 $email = $_POST['email'];
 $password = $_POST['password'];
 $role = $_POST['user_role'];  // 'Applicant' or 'Admin' from the form
-$github_url = mysqli_real_escape_string($conn, $_POST['github_url'] ?? '');
-$experience = mysqli_real_escape_string($conn, $_POST['experience'] ?? '');
+$github_url = $_POST['github_url'];
+$experience = $_POST['experience'];
 
 // Check if the email already exists in the User table
 $check = "SELECT * FROM User WHERE Email = '$email'";
 $result = $conn->query($check);
 
 if ($result->num_rows > 0) {
-    // Email is already taken — show error and go back to register page
+    // Email is already taken 
     echo "<script>
         alert('Error: This email is already registered.');
         window.location.href = 'register.html';
@@ -28,9 +28,11 @@ if ($result->num_rows > 0) {
     $sql = "INSERT INTO User (First_Name, Last_Name, Email, Password, Role)
             VALUES ('$first_name', '$last_name', '$email', '$password', '$role')";
 
+//    generates a unique id
+
     if ($conn->query($sql) === TRUE) {
 
-        // If the user is an Applicant, also insert into the Applicant subtable
+        // If the user is an Applicant, also insert into the Applicant subtable,also here the newUserID is the USERID and acts as a foreign key
         if ($role == 'Applicant') {
             $newUserId = $conn->insert_id;
             $_SESSION['current_user_id'] = $newUserId;
@@ -62,5 +64,4 @@ if ($result->num_rows > 0) {
 }
 
 // Close the database connection
-$conn->close();
 ?>

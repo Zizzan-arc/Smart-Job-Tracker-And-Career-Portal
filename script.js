@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (showPasswordCheckbox.checked) {
       passwordInput.type = 'text';
     } else {
-      passwordInput.type = 'password';
+      // hides the password
+      passwordInput.type = 'password';  
     }
   });
 
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Password validation (Ensures it's not empty)
+    // .value returns boolean
     if (!passwordInput.value) {
       showError(passwordError);
       hasError = true;

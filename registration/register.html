@@ -55,7 +55,7 @@
             <span class="label-text text-slate-300 font-medium text-sm">I am joining as</span>
           </label>
           <div class="flex gap-3">
-            <!-- Applicant Radio -->
+            <!-- Applicant  -->
             <label id="roleApplicantLabel"
               class="role-option flex-1 flex items-center justify-center gap-2 cursor-pointer rounded-lg border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm font-medium text-slate-400 transition-all duration-300 hover:border-indigo-500/50 hover:text-slate-200 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white has-[:checked]:shadow-md has-[:checked]:shadow-indigo-500/20">
               <input type="radio" name="user_role" id="roleApplicant" value="Applicant"
@@ -67,7 +67,7 @@
               </svg>
               <span>Applicant</span>
             </label>
-            <!-- Admin Radio -->
+            <!-- Admin  -->
             <label id="roleAdminLabel"
               class="role-option flex-1 flex items-center justify-center gap-2 cursor-pointer rounded-lg border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm font-medium text-slate-400 transition-all duration-300 hover:border-indigo-500/50 hover:text-slate-200 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-500/15 has-[:checked]:text-white has-[:checked]:shadow-md has-[:checked]:shadow-indigo-500/20">
               <input type="radio" name="user_role" id="roleAdmin" value="Admin"
@@ -147,6 +147,7 @@
         </div>
 
         <!-- GitHub URL Field -->
+         <div id="githubSection" class="hidden">
         <div class="form-control w-full">
           <label class="label" for="githubUrl">
             <span class="label-text text-slate-300 font-medium text-sm">GitHub Profile URL</span>
@@ -165,8 +166,10 @@
           </div>
           <p id="githubUrlError" class="text-error text-xs mt-1 hidden">Please enter a valid GitHub URL.</p>
         </div>
+        </div>
 
         <!-- Experience Field -->
+         <div id="experienceSection" class="hidden">
         <div class="form-control w-full">
           <label class="label" for="experience">
             <span class="label-text text-slate-300 font-medium text-sm">Experience</span>
@@ -184,6 +187,7 @@
               class="input input-bordered w-full pl-10 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:outline-none transition-colors duration-300" />
           </div>
           <p id="experienceError" class="text-error text-xs mt-1 hidden">Please enter your experience.</p>
+        </div>
         </div>
 
         <!-- Password Field -->

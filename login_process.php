@@ -5,7 +5,7 @@ session_start();
 include 'Database.php';
 
 // email and password submitted from the login form (index.html) 
-//$_POST is an global associative array that receives data from html FORM
+//$_POST is an global associative array that receives data from html FORM. Associative array is like key value pair 
 $email = $_POST['email'];
 $password = $_POST['password'];
 
@@ -36,7 +36,7 @@ if ($result->num_rows == 1) {
     // Login failed and redirect
     echo "<script>
         alert('Login Failed');
-        window.location.href = 'index.html';
+        window.location.href = 'index.html';  
     </script>";
 }
 ?>
