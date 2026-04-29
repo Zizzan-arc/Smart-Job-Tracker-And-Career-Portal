@@ -5,11 +5,10 @@ session_start();
 include 'Database.php';
 
 // email and password submitted from the login form (index.html) 
-//$_POST is an global associative array that receives data from html FORM
-$email = $_POST['email'];
-$password = $_POST['password'];
+$email = $_POST['email'] ?? '';
+$password = $_POST['password'] ?? '';
 
-// Query the User table to find a user with matching email and password (PHP and MySQl bridge)
+// Query the User table to find a matching account
 $sql = "SELECT * FROM User WHERE Email = '$email' AND Password = '$password'";
 $result = $conn->query($sql);
 

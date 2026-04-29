@@ -1,4 +1,4 @@
-<!-- <?php
+<?php
 include '../Database.php';
 
 $jobId = intval($_GET['job_id'] ?? 0);
@@ -6,23 +6,23 @@ $jobTitle = 'All Applicants';
 $applicants = null;
 
 if ($jobId > 0) {
-    $jobResult = $conn->query("SELECT Job_title FROM jobpost WHERE Job_ID = $jobId");
+    $jobResult = $conn->query("SELECT Job_title FROM JobPost WHERE Job_ID = $jobId");
     if ($jobResult && $jobResult->num_rows) {
         $jobTitle = 'Applicants for ' . $jobResult->fetch_assoc()['Job_title'];
     }
     $sql = "SELECT app.Application_date, app.Status, app.Referred_By, u.UserID, u.Email, ap.GitHub_URL, ap.Experience
             FROM appliesto app
-            JOIN user u ON app.UserID = u.UserID
-            LEFT JOIN applicant ap ON u.UserID = ap.UserID
+            JOIN User u ON app.UserID = u.UserID
+            LEFT JOIN Applicant ap ON u.UserID = ap.UserID
             WHERE app.Job_ID = $jobId
             ORDER BY app.Application_date DESC";
     $applicants = $conn->query($sql);
 } else {
     $sql = "SELECT app.Application_date, app.Status, app.Referred_By, u.UserID, u.Email, ap.GitHub_URL, ap.Experience, j.Job_title
             FROM appliesto app
-            JOIN user u ON app.UserID = u.UserID
-            LEFT JOIN applicant ap ON u.UserID = ap.UserID
-            LEFT JOIN jobpost j ON app.Job_ID = j.Job_ID
+            JOIN User u ON app.UserID = u.UserID
+            LEFT JOIN Applicant ap ON u.UserID = ap.UserID
+            LEFT JOIN JobPost j ON app.Job_ID = j.Job_ID
             ORDER BY app.Application_date DESC";
     $applicants = $conn->query($sql);
 }
@@ -91,4 +91,4 @@ if ($jobId > 0) {
         </div>
     </div>
 </body>
-</html> -->
+</html>

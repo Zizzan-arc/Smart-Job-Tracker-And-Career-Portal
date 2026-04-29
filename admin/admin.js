@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            const categories = document.querySelectorAll('input[name="categories[]"]:checked');
+            if (categories.length === 0) {
+                alert('Please select at least one category.');
+                event.preventDefault();
+                return;
+            }
+
             if (skills.length === 0) {
                 alert('Please select at least one required skill.');
                 event.preventDefault();

@@ -2,7 +2,7 @@
 include '../Database.php';
 
 $admin = null;
-$result = $conn->query("SELECT * FROM user WHERE Role = 'admin' LIMIT 1");
+$result = $conn->query("SELECT * FROM User WHERE Role = 'admin' LIMIT 1");
 if ($result && $result->num_rows) {
     $admin = $result->fetch_assoc();
 }

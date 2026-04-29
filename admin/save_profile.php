@@ -16,14 +16,14 @@ if (!$adminId || !$email || !$password) {
 }
 
 // Prevent updating to an email that already belongs to another user
-$checkEmailSql = "SELECT UserID FROM user WHERE Email = '$email' AND UserID <> $adminId";
+$checkEmailSql = "SELECT UserID FROM User WHERE Email = '$email' AND UserID <> $adminId";
 $emailResult = $conn->query($checkEmailSql);
 if ($emailResult && $emailResult->num_rows > 0) {
     echo "<script>alert('This email is already used by another account. Please use a different email.'); window.location.href = 'profile.php';</script>";
     exit;
 }
 
-$sql = "UPDATE user SET Email = '$email', Password = '$password' WHERE UserID = $adminId AND Role = 'admin'";
+$sql = "UPDATE User SET Email = '$email', Password = '$password' WHERE UserID = $adminId AND Role = 'admin'";
 if ($conn->query($sql) === TRUE) {
     echo "<script>alert('Profile updated successfully.'); window.location.href = 'profile.php';</script>";
     exit;

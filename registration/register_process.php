@@ -17,7 +17,7 @@ $experience = $_POST['experience'];
 $check = "SELECT * FROM User WHERE Email = '$email'";
 $result = $conn->query($check);
 
-if ($result->num_rows > 0) {
+if ($result && $result->num_rows > 0) {
     // Email is already taken 
     echo "<script>
         alert('Error: This email is already registered.');
@@ -41,7 +41,7 @@ if ($result->num_rows > 0) {
                      VALUES ($newUserId, '$github_url', '$experience', 0)";
             $conn->query($sql2);
         } elseif ($role == 'Admin') {
-            $sql2 = "INSERT INTO admin (UserID) VALUES ($newUserId)";
+            $sql2 = "INSERT INTO Admin (UserID) VALUES ($newUserId)";
             $conn->query($sql2);
         }
 

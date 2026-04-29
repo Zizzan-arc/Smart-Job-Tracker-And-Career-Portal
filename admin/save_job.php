@@ -29,7 +29,9 @@ if (!$jobTitle || !$baseSalary || !$workModel || !$employmentType || !$deadline 
     exit;
 }
 
-$sql = "INSERT INTO jobpost (Job_title, Base_salary, Work_Model, Employment_Type, Deadline, Company_ID) VALUES ('$jobTitle', '$baseSalary', '$workModel', '$employmentType', '$deadline', $companyId)";
+$categories = $_POST['categories'] ?? [];
+
+$sql = "INSERT INTO JobPost (Job_title, Base_salary, Work_Model, Employment_Type, Deadline, Company_ID) VALUES ('$jobTitle', '$baseSalary', '$workModel', '$employmentType', '$deadline', $companyId)";
 
 // to check it is successfull query or 
 if ($conn->query($sql) === TRUE) {
@@ -37,12 +39,20 @@ if ($conn->query($sql) === TRUE) {
     foreach ($skills as $skillId) {
         $skillId = intval($skillId);
         if ($skillId > 0) {
-            $conn->query("INSERT INTO requires_skill (Job_ID, Skill_ID, Is_madatory) VALUES ($jobId, $skillId, 0)");
+            $conn->query("INSERT INTO Requires_Skill (Job_ID, Skill_ID, Is_madatory) VALUES ($jobId, $skillId, 0)");
         }
     }
+
+    foreach ($categories as $categoryId) {
+        $categoryId = intval($categoryId);
+        if ($categoryId > 0) {
+            $conn->query("INSERT INTO Job_Category (Job_ID, Category_ID) VALUES ($jobId, $categoryId)");
+        }
+    }
+
     echo "<script>alert('Job created successfully.'); window.location.href = 'jobs.php';</script>";
     exit;
-}
+} 
 
 echo "<script>alert('Could not create job.'); window.location.href = 'create_job.php';</script>";
 exit;

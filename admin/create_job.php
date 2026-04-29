@@ -3,15 +3,23 @@ include '../Database.php';
 
 $companies = [];
 $skills = [];
+$categories = [];
 
-$companyResult = $conn->query('SELECT Company_ID, Company_name FROM company ORDER BY Company_name');
+$companyResult = $conn->query('SELECT Company_ID, Company_name FROM Company ORDER BY Company_name');
 if ($companyResult) {
     while ($row = $companyResult->fetch_assoc()) {
         $companies[] = $row;
     }
 }
 
-$skillResult = $conn->query('SELECT Skill_ID, Skill_name FROM skill ORDER BY Skill_name');
+$categoryResult = $conn->query('SELECT Category_ID, Category_name FROM Category ORDER BY Category_name');
+if ($categoryResult) {
+    while ($row = $categoryResult->fetch_assoc()) {
+        $categories[] = $row;
+    }
+}
+
+$skillResult = $conn->query('SELECT Skill_ID, Skill_name FROM Skill ORDER BY Skill_name');
 if ($skillResult) {
     while ($row = $skillResult->fetch_assoc()) {
         $skills[] = $row;
@@ -85,6 +93,18 @@ if ($skillResult) {
                                 <?php echo htmlspecialchars($company['Company_name']); ?></option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+
+                <div>
+                    <label class="label"><span class="label-text">Categories</span></label>
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <?php foreach ($categories as $category): ?>
+                            <label class="flex items-center gap-3 border rounded-lg p-3 cursor-pointer">
+                                <input type="checkbox" name="categories[]" value="<?php echo $category['Category_ID']; ?>" class="checkbox" />
+                                <span><?php echo htmlspecialchars($category['Category_name']); ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
 
                 <div>

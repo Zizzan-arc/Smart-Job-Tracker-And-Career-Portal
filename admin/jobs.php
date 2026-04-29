@@ -3,9 +3,12 @@ include '../Database.php';
 
 $jobs = $conn->query(
     'SELECT j.Job_ID, j.Job_title, j.Base_salary, j.Work_Model, j.Employment_Type, j.Deadline, c.Company_name,
+            COALESCE(GROUP_CONCAT(DISTINCT cat.Category_name ORDER BY cat.Category_name SEPARATOR ", "), "Uncategorized") AS categories,
             COUNT(a.Application_ID) AS application_count
-     FROM jobpost j
-     LEFT JOIN company c ON j.Company_ID = c.Company_ID
+     FROM JobPost j
+     LEFT JOIN Company c ON j.Company_ID = c.Company_ID
+     LEFT JOIN Job_Category jc ON j.Job_ID = jc.Job_ID
+     LEFT JOIN Category cat ON jc.Category_ID = cat.Category_ID
      LEFT JOIN appliesto a ON j.Job_ID = a.Job_ID
      GROUP BY j.Job_ID, j.Job_title, j.Base_salary, j.Work_Model, j.Employment_Type, j.Deadline, c.Company_name
      ORDER BY j.Job_ID DESC'
@@ -42,6 +45,7 @@ $jobs = $conn->query(
                         <th>ID</th>
                         <th>Title</th>
                         <th>Company</th>
+                        <th>Categories</th>
                         <th>Type</th>
                         <th>Deadline</th>
                         <th>Applications</th>
@@ -55,6 +59,7 @@ $jobs = $conn->query(
                                 <td><?php echo $job['Job_ID']; ?></td>
                                 <td><?php echo htmlspecialchars($job['Job_title']); ?></td>
                                 <td><?php echo htmlspecialchars($job['Company_name'] ?: 'No company'); ?></td>
+                                <td><?php echo htmlspecialchars($job['categories']); ?></td>
                                 <td><?php echo htmlspecialchars($job['Employment_Type']); ?></td>
                                 <td><?php echo htmlspecialchars($job['Deadline']); ?></td>
                                 <td><?php echo $job['application_count']; ?></td>
