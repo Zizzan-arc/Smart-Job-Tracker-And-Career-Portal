@@ -81,7 +81,8 @@ if ($skillResult) {
                     <select id="companyId" name="company_id" class="select select-bordered w-full" required>
                         <option value="">Select a company</option>
                         <?php foreach ($companies as $company): ?>
-                            <option value="<?php echo $company['Company_ID']; ?>"><?php echo htmlspecialchars($company['Company_name']); ?></option>
+                            <option value="<?php echo $company['Company_ID']; ?>">
+                                <?php echo htmlspecialchars($company['Company_name']); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

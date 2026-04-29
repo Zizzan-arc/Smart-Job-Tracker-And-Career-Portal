@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 include '../Database.php';
 
 $jobId = intval($_GET['job_id'] ?? 0);
@@ -91,4 +91,4 @@ if ($jobId > 0) {
         </div>
     </div>
 </body>
-</html>
+</html> -->

@@ -7,6 +7,7 @@ if ($result && $result->num_rows) {
     $admin = $result->fetch_assoc();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

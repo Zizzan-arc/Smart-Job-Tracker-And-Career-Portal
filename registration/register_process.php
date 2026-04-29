@@ -32,12 +32,16 @@ if ($result->num_rows > 0) {
 
     if ($conn->query($sql) === TRUE) {
 
-        // If the user is an Applicant, also insert into the Applicant subtable,also here the newUserID is the USERID and acts as a foreign key
+        // Get the new user ID for role-specific tables
+        $newUserId = $conn->insert_id;
+
         if ($role == 'Applicant') {
-            $newUserId = $conn->insert_id;
             $_SESSION['current_user_id'] = $newUserId;
             $sql2 = "INSERT INTO Applicant (UserID, GitHub_URL, Experience, Referral_Points)
                      VALUES ($newUserId, '$github_url', '$experience', 0)";
+            $conn->query($sql2);
+        } elseif ($role == 'Admin') {
+            $sql2 = "INSERT INTO admin (UserID) VALUES ($newUserId)";
             $conn->query($sql2);
         }
 

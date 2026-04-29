@@ -7,6 +7,7 @@ $applicantCount = 0;
 $applicationCount = 0;
 
 $result = $conn->query('SELECT COUNT(*) AS c FROM jobpost');
+// the if checks are for if the query was successful or not 
 if ($result) {
     $jobCount = $result->fetch_assoc()['c'];
 }
@@ -36,6 +37,8 @@ $jobs = $conn->query(
      LIMIT 5'
 );
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -80,7 +83,8 @@ $jobs = $conn->query(
         <div class="flex flex-wrap gap-4 mb-8">
             <a href="create_job.php" class="btn btn-primary">Create Job</a>
             <a href="jobs.php" class="btn btn-secondary">View Jobs</a>
-            <a href="view_applicants.php" class="btn btn-accent">View All Applicants</a>
+            <!-- Applicant side -->
+            <!-- <a href="view_applicants.php" class="btn btn-accent">View All Applicants</a> -->
         </div>
 
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -100,6 +104,7 @@ $jobs = $conn->query(
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- checking if the query was successful and if there are jobs present or not -->
                         <?php if ($jobs && $jobs->num_rows): ?>
                             <?php while ($job = $jobs->fetch_assoc()): ?>
                                 <tr>

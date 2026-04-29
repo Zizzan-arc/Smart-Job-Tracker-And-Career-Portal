@@ -28,7 +28,9 @@ $jobs = $conn->query(
                 <p class="text-slate-600">All posted jobs and application counts.</p>
             </div>
             <div class="flex gap-3">
+                <!-- going into the home page -->
                 <a href="index.php" class="btn btn-outline">Dashboard</a>
+                <!-- going into the create job page -->
                 <a href="create_job.php" class="btn btn-primary">Create Job</a>
             </div>
         </div>
