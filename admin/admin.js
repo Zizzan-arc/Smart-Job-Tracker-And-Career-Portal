@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const deadline = document.getElementById('deadline').value;
             const company = document.getElementById('companyId').value;
             const skills = document.querySelectorAll('input[name="required_skills[]"]:checked');
+            const otherSkill = document.querySelector('input[name="other_skill"]').value.trim();
 
             if (!title || !salary || !deadline || company === '') {
                 alert('Please complete all required job fields.');
@@ -21,9 +22,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (skills.length === 0) {
-                alert('Please select at least one required skill.');
+            if (skills.length === 0 && otherSkill === '') {
+                alert('Please select at least one required skill or add a new required skill.');
                 event.preventDefault();
+                return;
             }
         });
     }

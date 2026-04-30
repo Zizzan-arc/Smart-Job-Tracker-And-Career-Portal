@@ -10,7 +10,7 @@ if ($jobId > 0) {
     if ($jobResult && $jobResult->num_rows) {
         $jobTitle = 'Applicants for ' . $jobResult->fetch_assoc()['Job_title'];
     }
-    $sql = "SELECT app.Application_date, app.Status, app.Referred_By, u.UserID, u.Email, ap.GitHub_URL, ap.Experience
+    $sql = "SELECT app.Job_ID, app.Application_date, app.Status, u.UserID, u.Email, ap.GitHub_URL, ap.Experience_Years
             FROM appliesto app
             JOIN User u ON app.UserID = u.UserID
             LEFT JOIN Applicant ap ON u.UserID = ap.UserID
@@ -18,7 +18,7 @@ if ($jobId > 0) {
             ORDER BY app.Application_date DESC";
     $applicants = $conn->query($sql);
 } else {
-    $sql = "SELECT app.Application_date, app.Status, app.Referred_By, u.UserID, u.Email, ap.GitHub_URL, ap.Experience, j.Job_title
+    $sql = "SELECT app.Job_ID, app.Application_date, app.Status, u.UserID, u.Email, ap.GitHub_URL, ap.Experience_Years, j.Job_title
             FROM appliesto app
             JOIN User u ON app.UserID = u.UserID
             LEFT JOIN Applicant ap ON u.UserID = ap.UserID
@@ -59,7 +59,7 @@ if ($jobId > 0) {
                         <th>Experience</th>
                         <th>Application Date</th>
                         <th>Status</th>
-                        <th>Referred By</th>
+                        <th>Actions</th>
                         <?php if ($jobId === 0): ?>
                             <th>Job Title</th>
                         <?php endif; ?>
@@ -72,10 +72,19 @@ if ($jobId > 0) {
                                 <td><?php echo $app['UserID']; ?></td>
                                 <td><?php echo htmlspecialchars($app['Email']); ?></td>
                                 <td><?php echo htmlspecialchars($app['GitHub_URL'] ?: 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($app['Experience'] ?? '0'); ?></td>
+                                <td><?php echo htmlspecialchars($app['Experience_Years'] ?? '0'); ?></td>
                                 <td><?php echo htmlspecialchars($app['Application_date'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($app['Status'] ?? 'Pending'); ?></td>
-                                <td><?php echo htmlspecialchars($app['Referred_By'] ?: 'N/A'); ?></td>
+                                <td>
+                                    <div class="flex flex-col gap-2">
+                                        <a href="view_applicant_profile.php?user_id=<?php echo $app['UserID']; ?>" class="btn btn-xs btn-info">Profile</a>
+                                        <select class="status-select select select-bordered w-full select-sm" data-user-id="<?php echo $app['UserID']; ?>" data-job-id="<?php echo $app['Job_ID']; ?>">
+                                            <option value="Pending" <?php echo ($app['Status'] === 'Pending') ? 'selected' : ''; ?>>Pending</option>
+                                            <option value="Interviewed" <?php echo ($app['Status'] === 'Interviewed') ? 'selected' : ''; ?>>Interviewed</option>
+                                            <option value="Rejected" <?php echo ($app['Status'] === 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
+                                        </select>
+                                    </div>
+                                </td>
                                 <?php if ($jobId === 0): ?>
                                     <td><?php echo htmlspecialchars($app['Job_title'] ?: 'Unknown'); ?></td>
                                 <?php endif; ?>
@@ -83,12 +92,13 @@ if ($jobId > 0) {
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="<?php echo $jobId === 0 ? '8' : '7'; ?>" class="text-center py-8">No applications found.</td>
+                            <td colspan="<?php echo $jobId === 0 ? '7' : '6'; ?>" class="text-center py-8">No applications found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
+    <script src="view_applicants.js"></script>
 </body>
 </html>

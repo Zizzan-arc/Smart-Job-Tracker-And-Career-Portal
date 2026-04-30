@@ -4,7 +4,7 @@ include '../Database.php';
 $jobs = $conn->query(
     'SELECT j.Job_ID, j.Job_title, j.Base_salary, j.Work_Model, j.Employment_Type, j.Deadline, c.Company_name,
             COALESCE(GROUP_CONCAT(DISTINCT cat.Category_name ORDER BY cat.Category_name SEPARATOR ", "), "Uncategorized") AS categories,
-            COUNT(a.Application_ID) AS application_count
+            COUNT(a.Job_ID) AS application_count
      FROM JobPost j
      LEFT JOIN Company c ON j.Company_ID = c.Company_ID
      LEFT JOIN Job_Category jc ON j.Job_ID = jc.Job_ID

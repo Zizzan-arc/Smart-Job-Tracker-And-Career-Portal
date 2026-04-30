@@ -28,7 +28,7 @@ if ($result) {
 }
 
 $jobs = $conn->query(
-    'SELECT j.Job_ID, j.Job_title, c.Company_name, COALESCE(GROUP_CONCAT(DISTINCT cat.Category_name ORDER BY cat.Category_name SEPARATOR ", "), "Uncategorized") AS categories, j.Employment_Type, j.Deadline, COUNT(a.Application_ID) AS applications
+    'SELECT j.Job_ID, j.Job_title, c.Company_name, COALESCE(GROUP_CONCAT(DISTINCT cat.Category_name ORDER BY cat.Category_name SEPARATOR ", "), "Uncategorized") AS categories, j.Employment_Type, j.Deadline, COUNT(a.Job_ID) AS applications
      FROM JobPost j
      LEFT JOIN Company c ON j.Company_ID = c.Company_ID
      LEFT JOIN Job_Category jc ON j.Job_ID = jc.Job_ID

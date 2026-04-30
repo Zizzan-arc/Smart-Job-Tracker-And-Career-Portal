@@ -5,21 +5,21 @@ $companies = [];
 $skills = [];
 $categories = [];
 
-$companyResult = $conn->query('SELECT Company_ID, Company_name FROM Company ORDER BY Company_name');
+$companyResult = $conn->query('SELECT Company_ID, Company_Name FROM company ORDER BY Company_Name');
 if ($companyResult) {
     while ($row = $companyResult->fetch_assoc()) {
         $companies[] = $row;
     }
 }
 
-$categoryResult = $conn->query('SELECT Category_ID, Category_name FROM Category ORDER BY Category_name');
+$categoryResult = $conn->query('SELECT Category_ID, Category_Name FROM category ORDER BY Category_Name');
 if ($categoryResult) {
     while ($row = $categoryResult->fetch_assoc()) {
         $categories[] = $row;
     }
 }
 
-$skillResult = $conn->query('SELECT Skill_ID, Skill_name FROM Skill ORDER BY Skill_name');
+$skillResult = $conn->query('SELECT Skill_ID, Skill_Name FROM skill ORDER BY Skill_Name');
 if ($skillResult) {
     while ($row = $skillResult->fetch_assoc()) {
         $skills[] = $row;
@@ -90,7 +90,7 @@ if ($skillResult) {
                         <option value="">Select a company</option>
                         <?php foreach ($companies as $company): ?>
                             <option value="<?php echo $company['Company_ID']; ?>">
-                                <?php echo htmlspecialchars($company['Company_name']); ?></option>
+                                <?php echo htmlspecialchars($company['Company_Name']); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -101,7 +101,7 @@ if ($skillResult) {
                         <?php foreach ($categories as $category): ?>
                             <label class="flex items-center gap-3 border rounded-lg p-3 cursor-pointer">
                                 <input type="checkbox" name="categories[]" value="<?php echo $category['Category_ID']; ?>" class="checkbox" />
-                                <span><?php echo htmlspecialchars($category['Category_name']); ?></span>
+                                <span><?php echo htmlspecialchars($category['Category_Name']); ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -113,10 +113,29 @@ if ($skillResult) {
                         <?php foreach ($skills as $skill): ?>
                             <label class="flex items-center gap-3 border rounded-lg p-3 cursor-pointer">
                                 <input type="checkbox" name="required_skills[]" value="<?php echo $skill['Skill_ID']; ?>" class="checkbox" />
-                                <span><?php echo htmlspecialchars($skill['Skill_name']); ?></span>
+                                <span><?php echo htmlspecialchars($skill['Skill_Name']); ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
+                </div>
+
+                <div>
+                    <label class="label"><span class="label-text">Nice to Have Skills</span></label>
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <?php foreach ($skills as $skill): ?>
+                            <label class="flex items-center gap-3 border rounded-lg p-3 cursor-pointer">
+                                <input type="checkbox" name="nice_skills[]" value="<?php echo $skill['Skill_ID']; ?>" class="checkbox" />
+                                <span><?php echo htmlspecialchars($skill['Skill_Name']); ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <p class="text-slate-500 text-xs mt-1">Optional skills that are good to have but not required to apply.</p>
+                </div>
+
+                <div>
+                    <label class="label"><span class="label-text">Other Required Skill</span></label>
+                    <input type="text" name="other_skill" placeholder="Add a new required skill if needed" class="input input-bordered w-full" />
+                    <p class="text-slate-500 text-xs mt-1">Enter one new required skill if it is not in the list.</p>
                 </div>
 
                 <div class="flex gap-3 justify-end">

@@ -61,7 +61,7 @@ if ($result->num_rows > 0) {
                 <p class="text-slate-400 mt-1 text-sm">Choose the skills that match your expertise</p>
             </div>
 
-            <form id="skillsForm" action="save_skills.php" method="POST" class="space-y-6">
+            <form id="skillsForm" action="/Jobportal/onboarding/save_skills.php" method="POST" class="space-y-6">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- PHP for each loop -->
@@ -74,13 +74,19 @@ if ($result->num_rows > 0) {
                     <?php endforeach; ?>
                 </div>
 
-                <p id="skillsError" class="text-error text-xs mt-1 hidden">Please select at least one skill.</p>
+                <div>
+                    <label class="label"><span class="label-text text-slate-300">Other Skill</span></label>
+                    <input type="text" name="other_skill" placeholder="Enter a skill not listed" class="input input-bordered w-full bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500" />
+                    <p class="text-slate-500 text-xs mt-1">Add one new skill if it is not already in the list.</p>
+                </div>
+
+                <p id="skillsError" class="text-error text-xs mt-1 hidden">Please select at least one skill or enter an other skill.</p>
 
                 <div class="flex gap-3">
                     <button type="submit" class="btn btn-primary flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 border-none hover:from-indigo-600 hover:to-purple-700">
                         Continue
                     </button>
-                    <a href="../index.html" class="btn btn-outline flex-1">
+                    <a href="/Jobportal/index.html" class="btn btn-outline flex-1">
                         Skip for now
                     </a>
                 </div>

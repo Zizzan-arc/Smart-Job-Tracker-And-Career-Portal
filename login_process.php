@@ -8,8 +8,8 @@ include 'Database.php';
 $email = $_POST['email'] ?? '';
 $password = $_POST['password'] ?? '';
 
-// Query the User table to find a matching account
-$sql = "SELECT * FROM User WHERE Email = '$email' AND Password = '$password'";
+// Query the user table to find a matching account
+$sql = "SELECT * FROM user WHERE Email = '$email' AND Password = '$password'";
 $result = $conn->query($sql);
 
 
@@ -24,10 +24,10 @@ if ($result->num_rows == 1) {
 
     // Redirect based on the user's role by using header function of php
     if ($user['Role'] == 'Applicant') {
-        header("Location: applicant_dashboard.php");
+        header("Location: /Jobportal/applicant/applicant_dashboard.php");
         exit();
     } elseif ($user['Role'] == 'Admin') {
-        header("Location: admin/index.php");
+        header("Location: /Jobportal/admin/index.php");
         exit();
     }
 
@@ -35,7 +35,7 @@ if ($result->num_rows == 1) {
     // Login failed and redirect
     echo "<script>
         alert('Login Failed');
-        window.location.href = 'index.html';
+        window.location.href = '/Jobportal/index.html';
     </script>";
 }
 ?>
