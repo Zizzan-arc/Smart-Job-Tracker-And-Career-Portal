@@ -1,4 +1,4 @@
-function applyJob(jobId) {
+function applyJob(jobId, referrerId = null) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/Jobportal/applicant/apply_job.php', true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -12,7 +12,11 @@ function applyJob(jobId) {
         }
     };
     
-    xhr.send('job_id=' + jobId);
+    let body = 'job_id=' + jobId;
+    if (referrerId) {
+        body += '&referrer=' + encodeURIComponent(referrerId);
+    }
+    xhr.send(body);
 }
 
 function saveJob(jobId) {
@@ -25,7 +29,8 @@ function saveJob(jobId) {
             alert('Job saved successfully!');
             location.reload();
         } else {
-            alert('Error saving job. Please try again.');
+            const message = xhr.responseText ? xhr.responseText : 'Error saving job. Please try again.';
+            alert(message);
         }
     };
     

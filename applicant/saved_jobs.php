@@ -2,7 +2,7 @@
 session_start();
 include '../Database.php';
 
-$userId = $_SESSION['current_user_id'] ?? $_SESSION['user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
 if (!$userId) {
     header('Location: ../index.html');
     exit();
@@ -11,6 +11,7 @@ if (!$userId) {
 $savedQuery = "SELECT j.Job_ID, j.Job_Title, j.Base_Salary, j.Work_Model, j.Employment_Type, j.Deadline, c.Company_name,
                       TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) AS hours_left,
                       (TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) BETWEEN 0 AND 48) AS expiring_soon,
+                      COUNT(DISTINCT CASE WHEN rs.Skill_ID IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS match_count,
                       COUNT(DISTINCT CASE WHEN rs.Is_Mandatory = 1 THEN rs.Skill_ID END) AS total_mandatory,
                       COUNT(DISTINCT CASE WHEN rs.Is_Mandatory = 1 AND rs.Skill_ID IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS matched_mandatory
                FROM Wishlist w
@@ -19,6 +20,7 @@ $savedQuery = "SELECT j.Job_ID, j.Job_Title, j.Base_Salary, j.Work_Model, j.Empl
                LEFT JOIN Requires_Skill rs ON j.Job_ID = rs.Job_ID
                WHERE w.UserID = $userId
                GROUP BY j.Job_ID, j.Job_Title, j.Base_Salary, j.Work_Model, j.Employment_Type, j.Deadline, c.Company_name
+               HAVING match_count > 0
                ORDER BY w.Date_Saved DESC";
 
 $savedResult = $conn->query($savedQuery);
@@ -71,6 +73,8 @@ function getMissingSkills($conn, $userId, $jobId) {
             </div>
         </div>
 
+        <!-- Job details in the saved_jobs  section -->
+             <!-- if it is not empty the saved job part-->
         <?php if (!empty($savedJobs)): ?>
             <div class="space-y-4">
                 <?php foreach ($savedJobs as $job): ?>
@@ -104,22 +108,15 @@ function getMissingSkills($conn, $userId, $jobId) {
                             </div>
                             <div class="flex flex-col gap-3 lg:items-end">
                                 <a href="/Jobportal/applicant/job_details.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-secondary">View Details</a>
-                                <?php $canApply = ($job['match_count'] > 0 && ($job['total_mandatory'] == 0 || $job['matched_mandatory'] == $job['total_mandatory'])); ?>
                                 <?php if (in_array($job['Job_ID'], $appliedJobs)): ?>
                                     <span class="badge badge-success">Applied</span>
+                                <?php elseif ($canApply): ?>
+                                    <button type="button" class="btn btn-primary" onclick="applyJob(<?php echo $job['Job_ID']; ?>)">Apply</button>
                                 <?php else: ?>
-                                    <?php if ($canApply): ?>
-                                        <button type="button" class="btn btn-primary" onclick="applyJob(<?php echo $job['Job_ID']; ?>)">Apply</button>
-                                    <?php else: ?>
-                                        <?php if ($job['match_count'] == 0): ?>
-                                            <span class="badge badge-warning">No matching skills</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-warning">Mandatory skills missing</span>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
+                                    <span class="badge badge-warning">Mandatory skills missing</span>
+                                    <a href="/Jobportal/applicant/skill_gap.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-secondary">Skill Gap</a>
+                                    <button type="button" class="btn btn-outline btn-error" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Remove</button>
                                 <?php endif; ?>
-                                <a href="/Jobportal/applicant/skill_gap.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-secondary">Skill Gap</a>
-                                <button type="button" class="btn btn-outline btn-error" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Remove</button>
                             </div>
                         </div>
                     </div>

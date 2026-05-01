@@ -5,12 +5,12 @@ session_start();
 include '../Database.php';
 
 // Check if the same user is logged in from registration
-if (!isset($_SESSION['current_user_id'])) {
+if (!isset($_SESSION['user_id'])) {
     header('Location: ../registration/register.html');
     exit;
 }
 
-$userId = $_SESSION['current_user_id'];
+$userId = $_SESSION['user_id'];
 
 // Fetch all skills from Skill table
 $sql = "SELECT Skill_ID, Skill_name FROM Skill";
@@ -19,7 +19,9 @@ $result = $conn->query($sql);
 // storing the skills from database into an array (basically importing the skills so that I can use in the HTML part)
 $skillsarray = [];
 
+// populating the skillsarray with the data from database. 
 if ($result->num_rows > 0) {
+    // row = {"key": value} pair
     while ($row = $result->fetch_assoc()) {
         $skillsarray[] = $row;
     }
@@ -67,7 +69,9 @@ if ($result->num_rows > 0) {
                     <!-- PHP for each loop -->
                     <?php foreach ($skillsarray as $skill): ?>
                     <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-700/60 transition-colors duration-200">
-                        <input type="checkbox" name="selected_skills[]" value="<?php echo $skill['Skill_ID']; ?>" 
+                        <!-- in input tag, the value thing returns the ID to the system -->
+                        <input type="checkbox" name="selected_skills[]" value="
+                          <?php echo $skill['Skill_ID']; ?>" 
                             class="checkbox checkbox-sm checkbox-primary border-slate-600" />
                         <span class="text-slate-300 font-medium text-sm"><?php echo htmlspecialchars($skill['Skill_name']); ?></span>
                     </label>
@@ -79,16 +83,16 @@ if ($result->num_rows > 0) {
                     <input type="text" name="other_skill" placeholder="Enter a skill not listed" class="input input-bordered w-full bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500" />
                     <p class="text-slate-500 text-xs mt-1">Add one new skill if it is not already in the list.</p>
                 </div>
-
+                 <!-- Skill Error Message -->
                 <p id="skillsError" class="text-error text-xs mt-1 hidden">Please select at least one skill or enter an other skill.</p>
 
                 <div class="flex gap-3">
                     <button type="submit" class="btn btn-primary flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 border-none hover:from-indigo-600 hover:to-purple-700">
                         Continue
                     </button>
-                    <a href="/Jobportal/index.html" class="btn btn-outline flex-1">
+                    <!-- <a href="/Jobportal/index.html" class="btn btn-outline flex-1">
                         Skip for now
-                    </a>
+                    </a> -->
                 </div>
 
             </form>

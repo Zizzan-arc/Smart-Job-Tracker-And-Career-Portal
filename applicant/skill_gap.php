@@ -3,7 +3,7 @@ session_start();
 include '../Database.php';
 
 // Get current logged-in user ID
-$userId = $_SESSION['current_user_id'] ?? $_SESSION['user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
 
 if (!$userId) {
     header('Location: /Jobportal/index.html');
@@ -12,7 +12,7 @@ if (!$userId) {
 
 $jobId = intval($_GET['job_id'] ?? 0);
 if ($jobId <= 0) {
-    header('Location: /Jobportal/applicant/job_listing.php');
+    header('Location: /Jobportal/applicant/browse_jobs.php');
     exit();
 }
 
@@ -46,7 +46,7 @@ function getJobTitle($conn, $jobId) {
 
 $job = getJobTitle($conn, $jobId);
 if (!$job) {
-    header('Location: /Jobportal/applicant/job_listing.php');
+    header('Location: /Jobportal/applicant/browse_jobs.php');
     exit();
 }
 
@@ -81,8 +81,9 @@ $missingSkills = getMissingSkills($conn, $userId, $jobId);
                 <p class="text-slate-600">See which skills you still need for this job.</p>
             </div>
             <div class="flex gap-3">
-                <a href="/Jobportal/applicant/job_listing.php" class="btn btn-outline">Back to Jobs</a>
+                <a href="/Jobportal/applicant/browse_jobs.php" class="btn btn-outline">← Browse Jobs</a>
                 <a href="/Jobportal/applicant/applicant_dashboard.php" class="btn btn-primary">Dashboard</a>
+                <a href="/Jobportal/logout.php" class="btn btn-outline btn-error">Logout</a>
             </div>
         </div>
 

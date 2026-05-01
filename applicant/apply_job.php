@@ -3,7 +3,7 @@ session_start();
 include '../Database.php';
 
 // Get user ID
-$userId = $_SESSION['current_user_id'] ?? $_SESSION['user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
 
 if (!$userId) {
     http_response_code(401);
@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $jobId = intval($_POST['job_id'] ?? 0);
+$referrerId = intval($_POST['referrer'] ?? 0);
 
 if ($jobId <= 0) {
     http_response_code(400);
@@ -25,8 +26,10 @@ if ($jobId <= 0) {
     exit();
 }
 
-// Check if already applied
+
 $checkResult = $conn->query("SELECT 1 FROM appliesto WHERE UserID = $userId AND Job_ID = $jobId LIMIT 1");
+
+// already applied or not
 if ($checkResult && $checkResult->num_rows > 0) {
     http_response_code(400);
     echo "Already applied";
@@ -69,9 +72,15 @@ if ($total_mandatory > 0 && $matchedMandatory < $total_mandatory) {
     exit();
 }
 
-// Insert application
+
 $sql = "INSERT INTO appliesto (UserID, Job_ID, Application_date, Status) VALUES ($userId, $jobId, NOW(), 'Pending')";
 if ($conn->query($sql) === TRUE) {
+    if ($referrerId > 0 && $referrerId !== $userId) {
+        $refCheck = $conn->query("SELECT UserID FROM applicant WHERE UserID = $referrerId LIMIT 1");
+        if ($refCheck && $refCheck->num_rows > 0) {
+            $conn->query("UPDATE applicant SET Referral_Points = Referral_Points + 1 WHERE UserID = $referrerId");
+        }
+    }
     http_response_code(200);
     echo "Success";
 } else {

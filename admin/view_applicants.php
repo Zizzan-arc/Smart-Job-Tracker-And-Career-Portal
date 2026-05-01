@@ -81,6 +81,7 @@ if ($jobId > 0) {
                                         <select class="status-select select select-bordered w-full select-sm" data-user-id="<?php echo $app['UserID']; ?>" data-job-id="<?php echo $app['Job_ID']; ?>">
                                             <option value="Pending" <?php echo ($app['Status'] === 'Pending') ? 'selected' : ''; ?>>Pending</option>
                                             <option value="Interviewed" <?php echo ($app['Status'] === 'Interviewed') ? 'selected' : ''; ?>>Interviewed</option>
+                                            <option value="Accepted" <?php echo ($app['Status'] === 'Accepted') ? 'selected' : ''; ?>>Accepted</option>
                                             <option value="Rejected" <?php echo ($app['Status'] === 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
                                         </select>
                                     </div>

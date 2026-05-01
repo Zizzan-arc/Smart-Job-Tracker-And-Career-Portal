@@ -2,7 +2,7 @@
 session_start();
 include '../Database.php';
 
-$userId = $_SESSION['current_user_id'] ?? $_SESSION['user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
 if (!$userId) {
     header('Location: ../index.html');
     exit();
@@ -13,7 +13,8 @@ $appliedQuery = "
            a.Status, a.Application_date,
            COUNT(DISTINCT rs.Skill_ID) AS total_skills,
            COUNT(DISTINCT CASE WHEN rs.Skill_ID NOT IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS missing_skills,
-           SUM(CASE WHEN rs.Is_Mandatory = 1 THEN 1 ELSE 0 END) AS mandatory_skills
+           SUM(CASE WHEN rs.Is_Mandatory = 1 THEN 1 ELSE 0 END) AS total_mandatory,
+           SUM(CASE WHEN rs.Is_Mandatory = 1 AND rs.Skill_ID NOT IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN 1 ELSE 0 END) AS missing_mandatory
     FROM appliesto a
     JOIN JobPost j ON a.Job_ID = j.Job_ID
     LEFT JOIN Company c ON j.Company_ID = c.Company_ID
@@ -29,6 +30,8 @@ while ($row = $result->fetch_assoc()) {
     $appliedJobs[] = $row;
 }
 ?>
+
+<!-- the HTML part -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,9 +76,14 @@ while ($row = $result->fetch_assoc()) {
                                     </span>
                                     <span class="text-slate-500 ml-2">Applied on <?php echo htmlspecialchars($job['Application_date']); ?></span>
                                 </div>
-                                <?php if ($job['missing_skills'] > 0): ?>
+                                <?php if ($job['missing_mandatory'] > 0): ?>
                                     <div class="mt-4 text-orange-700 font-semibold">
-                                        Missing <?php echo intval($job['missing_skills']); ?> skill(s)
+                                        Missing <?php echo intval($job['missing_mandatory']); ?> mandatory skill(s)
+                                    </div>
+                                <?php elseif ($job['missing_skills'] > 0): ?>
+                                    <div class="mt-4 text-orange-700 font-semibold">
+                                        Missing <?php echo intval($job['missing_skills']); ?> preferred skill(s
+                                        )
                                     </div>
                                 <?php else: ?>
                                     <div class="mt-4 text-green-700 font-semibold">You meet all required skills.</div>
@@ -83,9 +91,6 @@ while ($row = $result->fetch_assoc()) {
                             </div>
                             <div class="flex flex-col gap-3 lg:items-end">
                                 <a href="/Jobportal/applicant/job_details.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-secondary">View Details</a>
-                                <?php if ($job['missing_skills'] > 0): ?>
-                                    <a href="/Jobportal/applicant/skill_gap.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-primary">View Skill Gap</a>
-                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -97,5 +102,6 @@ while ($row = $result->fetch_assoc()) {
             </div>
         <?php endif; ?>
     </div>
+    <script src="/Jobportal/applicant/applicant.js"></script>
 </body>
 </html>

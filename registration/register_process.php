@@ -36,7 +36,7 @@ if ($result && $result->num_rows > 0) {
         $newUserId = $conn->insert_id;
 
         if ($role == 'Applicant') {
-            $_SESSION['current_user_id'] = $newUserId;
+            $_SESSION['user_id'] = $newUserId;
             $sql2 = "INSERT INTO applicant (UserID, GitHub_URL, Experience_Years, Referral_Points)
                      VALUES ($newUserId, '$github_url', '$experience', 0)";
             $conn->query($sql2);

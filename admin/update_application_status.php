@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 $userId = intval($_POST['user_id'] ?? 0);
 $jobId = intval($_POST['job_id'] ?? 0);
 $status = $_POST['status'] ?? '';
-$allowedStatuses = ['Pending', 'Interviewed', 'Rejected'];
+$allowedStatuses = ['Pending', 'Interviewed', 'Accepted', 'Rejected'];
 
 if ($userId <= 0 || $jobId <= 0 || !in_array($status, $allowedStatuses)) {
     http_response_code(400);

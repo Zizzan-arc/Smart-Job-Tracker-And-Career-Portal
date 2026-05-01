@@ -2,27 +2,25 @@
 session_start();
 include '../Database.php';
 
-// Get user ID from session (handle both registration and login)
-$userId = $_SESSION['current_user_id'] ?? $_SESSION['user_id'] ?? null;
-
+// 1. AUTHENTICATION & SESSION
+$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
 if (!$userId) {
     header('Location: ../index.html');
     exit();
 }
 
-// Get applicant info
-$applicantResult = $conn->query("SELECT u.First_Name, u.Last_Name, a.Experience_Years FROM User u JOIN Applicant a ON u.UserID = a.UserID WHERE u.UserID = $userId");
+// 2. FETCH APPLICANT BASIC INFO
+$applicantResult = $conn->query("SELECT u.First_Name, u.Last_Name, a.Experience_Years, a.Referral_Points FROM User u JOIN Applicant a ON u.UserID = a.UserID WHERE u.UserID = $userId");
 $applicant = $applicantResult->fetch_assoc();
 
-// Get applicant's skills
+// 3. FETCH APPLICANT SKILLS
 $skillsResult = $conn->query("SELECT s.Skill_ID, s.Skill_name FROM Has_Skill h JOIN Skill s ON h.Skill_ID = s.Skill_ID WHERE h.UserID = $userId");
 $applicantSkills = [];
 while ($skill = $skillsResult->fetch_assoc()) {
     $applicantSkills[] = $skill;
 }
 
-// Get recommended jobs (jobs that match at least one of the user's skills)
-$recommendedJobs = [];
+// 4. PREPARE TRACKING ARRAYS (Already Applied / Already Saved)
 $appliedJobs = [];
 $savedJobIds = [];
 $appliedResult = $conn->query("SELECT Job_ID FROM appliesto WHERE UserID = $userId");
@@ -34,8 +32,9 @@ while ($row = $savedResult->fetch_assoc()) {
     $savedJobIds[] = $row['Job_ID'];
 }
 
+// 5. FETCH RECOMMENDED JOBS (Based on skill match)
+$recommendedJobs = [];
 if (!empty($applicantSkills)) {
-    $skillIds = implode(',', array_column($applicantSkills, 'Skill_ID'));
     $recResult = $conn->query(
         "SELECT j.Job_ID, j.Job_title, c.Company_name, j.Base_salary, j.Deadline, j.Employment_Type,
                 TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) AS hours_left,
@@ -48,6 +47,7 @@ if (!empty($applicantSkills)) {
          LEFT JOIN Has_Skill hs ON rs.Skill_ID = hs.Skill_ID AND hs.UserID = $userId
          LEFT JOIN Company c ON j.Company_ID = c.Company_ID
          GROUP BY j.Job_ID, j.Job_title, c.Company_name, j.Base_salary, j.Deadline, j.Employment_Type
+         HAVING COUNT(DISTINCT hs.Skill_ID) > 0
          ORDER BY match_count DESC, j.Deadline ASC
          LIMIT 5"
     );
@@ -56,6 +56,30 @@ if (!empty($applicantSkills)) {
     }
 }
 
+// 6. FETCH SAVED JOBS (Skill Gap Analysis)
+$savedJobsQuery = "
+    SELECT j.Job_ID, j.Job_title, c.Company_name, j.Base_salary, j.Deadline, j.Employment_Type, j.Work_Model,
+           TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) AS hours_left,
+           (TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) BETWEEN 0 AND 48) AS expiring_soon,
+           COUNT(DISTINCT CASE WHEN rs.Skill_ID IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS match_count,
+           COUNT(DISTINCT CASE WHEN rs.Is_Mandatory = 1 THEN rs.Skill_ID END) AS total_mandatory,
+           COUNT(DISTINCT CASE WHEN rs.Is_Mandatory = 1 AND rs.Skill_ID IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS matched_mandatory,
+           COUNT(DISTINCT CASE WHEN rs.Is_Mandatory = 1 AND rs.Skill_ID NOT IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS missing_mandatory
+    FROM Wishlist w
+    JOIN JobPost j ON w.Job_ID = j.Job_ID
+    LEFT JOIN Company c ON j.Company_ID = c.Company_ID
+    LEFT JOIN Requires_Skill rs ON j.Job_ID = rs.Job_ID
+    WHERE w.UserID = $userId
+    GROUP BY j.Job_ID, j.Job_title, c.Company_name, j.Base_salary, j.Deadline, j.Employment_Type, j.Work_Model
+    ORDER BY w.Date_Saved DESC
+";
+$savedJobsResult = $conn->query($savedJobsQuery);
+$savedJobs = [];
+while ($job = $savedJobsResult->fetch_assoc()) {
+    $savedJobs[] = $job;
+}
+
+// 7. FETCH TRENDING JOBS
 $trendingResult = $conn->query(
     "SELECT j.Job_ID,
             j.Job_title,
@@ -77,7 +101,7 @@ while ($job = $trendingResult->fetch_assoc()) {
     $trendingJobs[] = $job;
 }
 
-// Get application status
+// 8. FETCH APPLICATION STATUS
 $statusResult = $conn->query(
     "SELECT a.Job_ID, a.Status, a.Application_date, j.Job_title, c.Company_name, j.Deadline,
             (TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) BETWEEN 0 AND 48) AS expiring_soon
@@ -92,6 +116,10 @@ while ($app = $statusResult->fetch_assoc()) {
     $applications[] = $app;
 }
 ?>
+
+<!-- the html part -->
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -108,6 +136,7 @@ while ($app = $statusResult->fetch_assoc()) {
             <div>
                 <h1 class="text-3xl font-bold">Welcome, <?php echo htmlspecialchars($applicant['First_Name']); ?></h1>
                 <p class="text-slate-600">Your job search dashboard</p>
+                <p class="text-sm text-slate-500 mt-2">Referral points: <strong><?php echo intval($applicant['Referral_Points'] ?? 0); ?></strong></p>
             </div>
             <div class="flex gap-3">
                 <a href="/Jobportal/applicant/browse_jobs.php" class="btn btn-primary">Browse Jobs</a>
@@ -152,24 +181,23 @@ while ($app = $statusResult->fetch_assoc()) {
                                     </div>
                                     <div class="flex flex-col gap-2 items-end">
                                         <a href="/Jobportal/applicant/job_details.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-secondary btn-sm">View Details</a>
+                                        
                                         <?php if (in_array($job['Job_ID'], $appliedJobs)): ?>
                                             <span class="badge badge-success">Applied</span>
                                         <?php else: ?>
-                                            <?php $canApply = ($job['match_count'] > 0 && ($job['total_mandatory'] == 0 || $job['matched_mandatory'] == $job['total_mandatory'])); ?>
+                                            <?php 
+                                                $canApply = ($job['match_count'] > 0 && ($job['total_mandatory'] == 0 || $job['matched_mandatory'] == $job['total_mandatory']));
+                                            ?>
                                             <?php if ($canApply): ?>
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="applyJob(<?php echo $job['Job_ID']; ?>)">Apply</button>
+                                                <button type="button" class="btn btn-sm btn-primary" onclick="applyJob(<?php echo $job['Job_ID']; ?>)">Apply</button>
                                             <?php else: ?>
-                                                <?php if ($job['match_count'] == 0): ?>
-                                                    <button type="button" class="btn btn-outline btn-sm" disabled title="No matching skills">Apply</button>
+                                                <?php if (in_array($job['Job_ID'], $savedJobIds)): ?>
+                                                    <button type="button" class="btn btn-sm btn-outline btn-error" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Remove</button>
                                                 <?php else: ?>
-                                                    <button type="button" class="btn btn-outline btn-sm" disabled title="Missing mandatory skills">Apply</button>
+                                                    <button type="button" class="btn btn-sm btn-outline" onclick="saveJob(<?php echo $job['Job_ID']; ?>)">Save</button>
                                                 <?php endif; ?>
+                                                <a href="/Jobportal/applicant/skill_gap.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-sm btn-secondary">Skill Gap</a>
                                             <?php endif; ?>
-                                        <?php endif; ?>
-                                        <?php if (in_array($job['Job_ID'], $savedJobIds)): ?>
-                                            <button type="button" class="btn btn-outline btn-error btn-sm" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Remove</button>
-                                        <?php else: ?>
-                                            <button type="button" class="btn btn-outline btn-sm" onclick="saveJob(<?php echo $job['Job_ID']; ?>)">Save</button>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -188,31 +216,6 @@ while ($app = $statusResult->fetch_assoc()) {
             <!-- Saved Jobs -->
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <h2 class="text-xl font-semibold mb-4">Saved Jobs</h2>
-                <?php
-                // Get saved jobs with skill gap analysis
-                $savedJobsQuery = "
-                    SELECT j.Job_ID, j.Job_title, c.Company_name, j.Base_salary, j.Deadline, j.Employment_Type, j.Work_Model,
-                           TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) AS hours_left,
-                           (TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) BETWEEN 0 AND 48) AS expiring_soon,
-                           COUNT(DISTINCT CASE WHEN rs.Skill_ID IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS match_count,
-                           COUNT(DISTINCT CASE WHEN rs.Is_Mandatory = 1 THEN rs.Skill_ID END) AS total_mandatory,
-                           COUNT(DISTINCT CASE WHEN rs.Is_Mandatory = 1 AND rs.Skill_ID IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS matched_mandatory,
-                           COUNT(DISTINCT CASE WHEN rs.Is_Mandatory = 1 AND rs.Skill_ID NOT IN (SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId) THEN rs.Skill_ID END) AS missing_mandatory
-                    FROM Wishlist w
-                    JOIN JobPost j ON w.Job_ID = j.Job_ID
-                    LEFT JOIN Company c ON j.Company_ID = c.Company_ID
-                    LEFT JOIN Requires_Skill rs ON j.Job_ID = rs.Job_ID
-                    WHERE w.UserID = $userId
-                    GROUP BY j.Job_ID, j.Job_title, c.Company_name, j.Base_salary, j.Deadline, j.Employment_Type, j.Work_Model
-                    ORDER BY w.Date_Saved DESC
-                ";
-                $savedJobsResult = $conn->query($savedJobsQuery);
-                $savedJobs = [];
-                while ($job = $savedJobsResult->fetch_assoc()) {
-                    $savedJobs[] = $job;
-                }
-                ?>
-
                 <?php if (!empty($savedJobs)): ?>
                     <div class="space-y-3">
                         <?php foreach ($savedJobs as $job): ?>
@@ -240,11 +243,11 @@ while ($app = $statusResult->fetch_assoc()) {
                                         </div>
                                     </div>
                                     <div class="flex flex-col gap-2 items-end">
-                                        <?php if ($job['missing_mandatory'] > 0): ?>
-                                            <button type="button" class="btn btn-outline btn-sm" disabled title="Missing mandatory skills">Apply Now</button>
-                                        <?php else: ?>
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="applyJob(<?php echo $job['Job_ID']; ?>)">Apply Now</button>
-                                        <?php endif; ?>
+                                        <button type="button" 
+                                                class="btn btn-sm <?php echo $job['missing_mandatory'] > 0 ? 'btn-outline' : 'btn-primary'; ?>" 
+                                                <?php echo $job['missing_mandatory'] > 0 ? 'disabled title="Missing mandatory skills"' : 'onclick="applyJob(' . $job['Job_ID'] . ')"'; ?>>
+                                            Apply Now
+                                        </button>
                                         <button type="button" class="btn btn-outline btn-error btn-sm" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Remove</button>
                                     </div>
                                 </div>
@@ -276,7 +279,7 @@ while ($app = $statusResult->fetch_assoc()) {
                                             <?php endif; ?>
                                         </div>
                                     </div>
-                                    <a href="job_listing.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-sm btn-primary">View</a>
+                                    <a href="/Jobportal/applicant/browse_jobs.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-sm btn-primary">View</a>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -306,7 +309,10 @@ while ($app = $statusResult->fetch_assoc()) {
                                     <td><?php echo htmlspecialchars($app['Job_title']); ?></td>
                                     <td><?php echo htmlspecialchars($app['Company_name'] ?: 'Company'); ?></td>
                                     <td>
-                                        <span class="badge <?php echo $app['Status'] == 'Accepted' ? 'badge-success' : ($app['Status'] == 'Rejected' ? 'badge-error' : 'badge-warning'); ?>">
+                                        <?php 
+                                            $statusClass = $app['Status'] == 'Accepted' ? 'badge-success' : ($app['Status'] == 'Rejected' ? 'badge-error' : 'badge-warning'); 
+                                        ?>
+                                        <span class="badge <?php echo $statusClass; ?>">
                                             <?php echo htmlspecialchars($app['Status']); ?>
                                         </span>
                                         <?php if ($app['expiring_soon']): ?>
