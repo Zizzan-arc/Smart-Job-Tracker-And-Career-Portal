@@ -24,13 +24,19 @@ if ($result && $result->num_rows === 1) {
     $isPasswordValid = ($password === $user['Password']);
 
     if ($isPasswordValid) {
-        $_SESSION['user_id'] = $user['UserID'];
-        $_SESSION['role'] = $user['Role'] ?? '';
+        $role = trim($user['Role'] ?? 'Applicant');
+        if ($role === '') {
+            $role = 'Applicant';
+        }
+        $role = ucfirst(strtolower($role));
 
-        if (($user['Role'] ?? '') === 'Applicant') {
+        $_SESSION['user_id'] = $user['UserID'];
+        $_SESSION['role'] = $role;
+
+        if ($role === 'Applicant') {
             header("Location: /Jobportal/applicant/applicant_dashboard.php");
             exit();
-        } elseif (($user['Role'] ?? '') === 'Admin') {
+        } elseif ($role === 'Admin') {
             header("Location: /Jobportal/admin/index.php");
             exit();
         }

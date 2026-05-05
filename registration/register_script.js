@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirm_password');
     const experienceYears = document.getElementById('experience_years');
+    const githubUrl = document.getElementById('github_url');
+    const applicantFields = document.getElementById('applicantFields');
+    const roleRadios = document.querySelectorAll('input[name="role"]');
 
     // Error elements
     const firstNameError = document.getElementById('firstNameError');
@@ -68,6 +71,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function validateExperience() {
+        if (!isApplicantSelected()) {
+            hideError(experienceError);
+            return true;
+        }
+
         const value = parseInt(experienceYears.value);
         if (isNaN(value) || value < 0) {
             showError(experienceError, 'Please enter valid experience years.');
@@ -75,6 +83,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         hideError(experienceError);
         return true;
+    }
+
+    function isApplicantSelected() {
+        return Array.from(roleRadios).some(radio => radio.checked && radio.value === 'Applicant');
+    }
+
+    function updateApplicantFieldsVisibility() {
+        if (isApplicantSelected()) {
+            applicantFields.style.display = 'block';
+            experienceYears.required = true;
+        } else {
+            applicantFields.style.display = 'none';
+            experienceYears.required = false;
+            experienceYears.value = '';
+            hideError(experienceError);
+        }
     }
 
     function showError(element, message) {
@@ -86,6 +110,9 @@ document.addEventListener('DOMContentLoaded', function() {
         element.classList.add('hidden');
     }
 
+    // Initial field visibility
+    updateApplicantFieldsVisibility();
+
     // Event listeners for real-time validation
     firstName.addEventListener('blur', validateFirstName);
     lastName.addEventListener('blur', validateLastName);
@@ -93,6 +120,10 @@ document.addEventListener('DOMContentLoaded', function() {
     password.addEventListener('blur', validatePassword);
     confirmPassword.addEventListener('blur', validateConfirmPassword);
     experienceYears.addEventListener('blur', validateExperience);
+
+    roleRadios.forEach((radio) => {
+        radio.addEventListener('change', updateApplicantFieldsVisibility);
+    });
 
     // Form submission
     form.addEventListener('submit', function(e) {

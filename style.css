@@ -1,0 +1,103 @@
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #070b16;
+  color: #e2e8f0;
+}
+
+.gradient-bg {
+  background: #07101f;
+  min-height: 100vh;
+}
+
+.card-glass {
+  background: #0d1220;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+.blob {
+  display: none;
+}
+
+.float-anim {
+  animation: float 16s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-18px) translateX(8px);
+  }
+}
+
+.input-glow {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.input-glow .input,
+.input-glow .textarea,
+.input-glow .select {
+  background: transparent;
+}
+
+.input-glow input:focus,
+.input-glow input:focus-visible,
+.input-glow textarea:focus,
+.input-glow select:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.16);
+}
+
+label.label-text,
+.label-text {
+  color: #cbd5e1;
+}
+
+.card-glass .btn,
+.card-glass .input,
+.card-glass .select,
+.card-glass .checkbox,
+.card-glass .radio {
+  background: rgba(15, 23, 42, 0.68);
+}
+
+.card-glass .btn-primary {
+  background-image: linear-gradient(90deg, #6366f1, #7c3aed);
+  border: none;
+}
+
+.card-glass .btn-primary:hover {
+  opacity: 0.95;
+}
+
+.card-glass .divider {
+  color: #94a3b8;
+}
+
+.card-glass .link {
+  color: #a5b4fc;
+}
+
+@media (max-width: 640px) {
+  .blob {
+    display: none;
+  }
+
+  .card-glass {
+    padding: 1.5rem;
+  }
+}

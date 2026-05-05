@@ -12,6 +12,11 @@ $lastName = trim($_POST['last_name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 $confirmPassword = $_POST['confirm_password'] ?? '';
+$selectedRole = trim($_POST['role'] ?? 'Applicant');
+$allowedRoles = ['Applicant', 'Admin'];
+if (!in_array($selectedRole, $allowedRoles, true)) {
+    $selectedRole = 'Applicant';
+}
 $githubUrl = trim($_POST['github_url'] ?? '');
 $experienceYears = intval($_POST['experience_years'] ?? 0);
 
@@ -45,8 +50,8 @@ $roleColumnResult = $conn->query("SHOW COLUMNS FROM User LIKE 'Role'");
 $hasRoleColumn = $roleColumnResult && $roleColumnResult->num_rows > 0;
 
 if ($hasRoleColumn) {
-    $userStmt = $conn->prepare("INSERT INTO User (First_Name, Last_Name, Email, Password, Role) VALUES (?, ?, ?, ?, 'Applicant')");
-    $userStmt->bind_param("ssss", $firstName, $lastName, $email, $password);
+    $userStmt = $conn->prepare("INSERT INTO User (First_Name, Last_Name, Email, Password, Role) VALUES (?, ?, ?, ?, ?)");
+    $userStmt->bind_param("sssss", $firstName, $lastName, $email, $password, $selectedRole);
 } else {
     $userStmt = $conn->prepare("INSERT INTO User (First_Name, Last_Name, Email, Password) VALUES (?, ?, ?, ?)");
     $userStmt->bind_param("ssss", $firstName, $lastName, $email, $password);
@@ -61,19 +66,27 @@ if (!$userStmt->execute()) {
 $userId = $conn->insert_id;
 $userStmt->close();
 
-$applicantStmt = $conn->prepare("INSERT INTO Applicant (UserID, GitHub_URL, Experience_Years, Referral_Points) VALUES (?, ?, ?, 0)");
-$applicantStmt->bind_param("isi", $userId, $githubUrl, $experienceYears);
-if (!$applicantStmt->execute()) {
-    $conn->query("DELETE FROM User WHERE UserID = $userId");
-    $_SESSION['register_errors'] = ['Registration failed: ' . $applicantStmt->error];
+if ($selectedRole === 'Applicant') {
+    $applicantStmt = $conn->prepare("INSERT INTO Applicant (UserID, GitHub_URL, Experience_Years, Referral_Points) VALUES (?, ?, ?, 0)");
+    $applicantStmt->bind_param("isi", $userId, $githubUrl, $experienceYears);
+    if (!$applicantStmt->execute()) {
+        $conn->query("DELETE FROM User WHERE UserID = $userId");
+        $_SESSION['register_errors'] = ['Registration failed: ' . $applicantStmt->error];
+        $applicantStmt->close();
+        header('Location: register.html');
+        exit();
+    }
     $applicantStmt->close();
-    header('Location: register.html');
-    exit();
 }
-$applicantStmt->close();
 
 $_SESSION['user_id'] = $userId;
 $_SESSION['current_user_id'] = $userId;
+$_SESSION['role'] = $selectedRole;
+
+if ($selectedRole === 'Admin') {
+    header('Location: ../admin/index.php');
+    exit();
+}
 
 header('Location: ../onboarding/skills.php');
 exit();

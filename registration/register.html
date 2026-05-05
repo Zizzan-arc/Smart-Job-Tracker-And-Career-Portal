@@ -15,9 +15,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
 </head>
 
-<body class="gradient-bg min-h-screen font-sans flex items-center justify-center p-4 relative overflow-hidden">
+<body class="gradient-bg min-h-screen font-sans flex items-start sm:items-center justify-center p-4 relative overflow-y-auto overflow-x-hidden">
 
   <!-- Decorative background blobs -->
   <div class="blob w-72 h-72 bg-indigo-500 -top-20 -left-20 float-anim" style="animation-delay:0s;"></div>
@@ -36,6 +37,22 @@
 
       <!-- ========== Registration Form ========== -->
       <form id="registerForm" action="register_process.php" method="POST" class="space-y-5" novalidate>
+
+        <!-- Role Selection -->
+        <div class="form-control w-full">
+          <label class="label"><span class="label-text text-slate-300 font-medium text-sm">Account Type</span></label>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-slate-800/60 cursor-pointer">
+              <input type="radio" name="role" value="Applicant" checked class="radio radio-primary" />
+              <span class="text-slate-300">Applicant</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-slate-800/60 cursor-pointer">
+              <input type="radio" name="role" value="Admin" class="radio radio-primary" />
+              <span class="text-slate-300">Admin</span>
+            </label>
+          </div>
+          <p class="text-slate-500 text-xs mt-1">Choose Applicant for job seeking, or Admin for admin access.</p>
+        </div>
 
         <!-- First Name -->
         <div class="form-control w-full">
@@ -78,18 +95,20 @@
         </div>
 
         <!-- GitHub URL (Optional) -->
-        <div class="form-control w-full">
-          <span class="label-text text-slate-300 font-medium text-sm">GitHub URL (Optional)</span>
-          <input type="url" id="github_url" name="github_url" placeholder="https://github.com/username"
-            class="input input-bordered w-full bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:outline-none transition-colors duration-300" />
-        </div>
+        <div id="applicantFields" class="space-y-5">
+          <div class="form-control w-full">
+            <span class="label-text text-slate-300 font-medium text-sm">GitHub URL (Optional)</span>
+            <input type="url" id="github_url" name="github_url" placeholder="https://github.com/username"
+              class="input input-bordered w-full bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:outline-none transition-colors duration-300" />
+          </div>
 
-        <!-- Experience Years -->
-        <div class="form-control w-full">
-          <span class="label-text text-slate-300 font-medium text-sm">Years of Experience</span>
-          <input type="number" id="experience_years" name="experience_years" placeholder="0" min="0" required
-            class="input input-bordered w-full bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:outline-none transition-colors duration-300" />
-          <p id="experienceError" class="text-error text-xs mt-1 hidden">Please enter valid experience years.</p>
+          <!-- Experience Years -->
+          <div class="form-control w-full">
+            <span class="label-text text-slate-300 font-medium text-sm">Years of Experience</span>
+            <input type="number" id="experience_years" name="experience_years" placeholder="0" min="0"
+              class="input input-bordered w-full bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:outline-none transition-colors duration-300" />
+            <p id="experienceError" class="text-error text-xs mt-1 hidden">Please enter valid experience years.</p>
+          </div>
         </div>
 
         <!-- Submit Button -->
