@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/auth.php';
 include '../Database.php';
 
 $jobId = intval($_GET['job_id'] ?? 0);

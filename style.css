@@ -73,6 +73,32 @@ label.label-text,
 .card-glass .checkbox,
 .card-glass .radio {
   background: rgba(15, 23, 42, 0.68);
+  transition: all 0.2s ease;
+}
+
+/* Global Radio Button Visibility Fix */
+input[type="radio"].radio:checked {
+  background-color: #ffffff !important;
+  border: 8px solid #6366f1 !important;
+  background-image: none !important;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.5) !important;
+}
+
+/* Global Checkbox Visibility Fix */
+input[type="checkbox"].checkbox:checked {
+  background-color: #6366f1 !important;
+  border-color: #6366f1 !important;
+  /* Forcing a bright white checkmark */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z'/%3E%3C/svg%3E") !important;
+  background-size: 80% 80% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Highlight any label containing a checked input */
+label:has(input:checked) {
+  border: 1.5px solid #6366f1 !important;
+  background-color: rgba(99, 102, 241, 0.2) !important;
 }
 
 .card-glass .btn-primary {

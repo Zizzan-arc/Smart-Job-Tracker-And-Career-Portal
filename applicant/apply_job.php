@@ -3,7 +3,7 @@ session_start();
 include '../Database.php';
 
 // Get user ID
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? null;
 
 if (!$userId) {
     http_response_code(401);
@@ -18,6 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $jobId = intval($_POST['job_id'] ?? 0);
+
+// the reffereId coming from the job_details section 
 $referrerId = intval($_POST['referrer'] ?? 0);
 
 if ($jobId <= 0) {
@@ -49,6 +51,7 @@ $matchedMandatoryResult = $conn->query(
      WHERE rs.Job_ID = $jobId AND rs.Is_Mandatory = 1 AND hs.UserID = $userId"
 );
 
+// this query basically counts the number of both mandatory and nice to have skills 
 $matchedCountResult = $conn->query(
     "SELECT COUNT(*) AS matched_count
      FROM Requires_Skill rs
@@ -60,7 +63,7 @@ $total_mandatory = $mandatoryResult ? intval($mandatoryResult->fetch_assoc()['to
 $matchedMandatory = $matchedMandatoryResult ? intval($matchedMandatoryResult->fetch_assoc()['matched_mandatory']) : 0;
 $matchedCount = $matchedCountResult ? intval($matchedCountResult->fetch_assoc()['matched_count']) : 0;
 
-if ($matchedCount === 0) {
+if ($total_mandatory > 0 && $matchedCount === 0) {
     http_response_code(400);
     echo "Cannot apply: no matching skills for this job.";
     exit();

@@ -2,7 +2,7 @@
 session_start();
 include '../Database.php';
 
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? null;
 if (!$userId) {
     header('Location: ../index.html');
     exit();
@@ -14,16 +14,20 @@ $filterCategory = intval($_GET['category'] ?? 0);
 $jobId = intval($_GET['job_id'] ?? 0);
 
 $skillIds = [];
+// getting the skills of applicant has
 $skillResult = $conn->query("SELECT Skill_ID FROM Has_Skill WHERE UserID = $userId");
 while ($row = $skillResult->fetch_assoc()) {
     $skillIds[] = intval($row['Skill_ID']);
 }
+// because this thing will be later used on the query so we are converting this to string by implode
 $skillList = !empty($skillIds) ? implode(',', $skillIds) : '0';
 
 $where = [];
+// String
 if ($searchTitle !== '') {
     $where[] = "j.Job_Title LIKE '%" . $conn->real_escape_string($searchTitle) . "%'";
 }
+// integer
 if ($filterCompany > 0) {
     $where[] = "j.Company_ID = $filterCompany";
 }
@@ -33,6 +37,7 @@ if ($filterCategory > 0) {
 if ($jobId > 0) {
     $where[] = "j.Job_ID = $jobId";
 }
+// putting all the  things in a seperate variable using ternary operator
 $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
 $jobsQuery = "SELECT j.Job_ID, j.Job_Title, j.Base_Salary, j.Work_Model, j.Employment_Type, j.Deadline, c.Company_name,
@@ -41,6 +46,8 @@ $jobsQuery = "SELECT j.Job_ID, j.Job_Title, j.Base_Salary, j.Work_Model, j.Emplo
                      COUNT(DISTINCT CASE WHEN rs.Skill_ID NOT IN ($skillList) THEN rs.Skill_ID END) AS missing_count,
                      SUM(CASE WHEN rs.Is_Mandatory = 1 THEN 1 ELSE 0 END) AS total_mandatory,
                      SUM(CASE WHEN rs.Is_Mandatory = 1 AND rs.Skill_ID IN ($skillList) THEN 1 ELSE 0 END) AS matched_mandatory,
+                     TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) AS hours_left,
+                     (TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) BETWEEN 0 AND 48) AS expiring_soon,
                      IFNULL(r.review_count, 0) AS review_count,
                      IFNULL(r.avg_rating, 0) AS avg_rating
               FROM JobPost j
@@ -55,7 +62,6 @@ $jobsQuery = "SELECT j.Job_ID, j.Job_Title, j.Base_Salary, j.Work_Model, j.Emplo
               ) r ON c.Company_ID = r.Company_ID
               $whereClause
               GROUP BY j.Job_ID, j.Job_Title, j.Base_Salary, j.Work_Model, j.Employment_Type, j.Deadline, c.Company_name, r.review_count, r.avg_rating
-              HAVING match_count > 0
               ORDER BY j.Job_ID DESC";
 
 $jobsResult = $conn->query($jobsQuery);
@@ -64,12 +70,14 @@ while ($row = $jobsResult->fetch_assoc()) {
     $jobs[] = $row;
 }
 
+// for the drop-down 
 $companiesResult = $conn->query("SELECT Company_ID, Company_name FROM Company ORDER BY Company_name");
 $companies = [];
 while ($row = $companiesResult->fetch_assoc()) {
     $companies[] = $row;
 }
 
+// for the drop-down 
 $categoriesResult = $conn->query("SELECT Category_ID, Category_name FROM Category ORDER BY Category_name");
 $categories = [];
 while ($row = $categoriesResult->fetch_assoc()) {
@@ -135,6 +143,7 @@ while ($row = $savedResult->fetch_assoc()) {
                     </div>
                     <div>
                         <label class="label"><span class="label-text">Category</span></label>
+                        <!-- For the category drop down -->
                         <select name="category" class="select select-bordered w-full">
                             <option value="">All Categories</option>
                             <?php foreach ($categories as $category): ?>
@@ -146,6 +155,8 @@ while ($row = $savedResult->fetch_assoc()) {
                     <a href="browse_jobs.php" class="btn btn-outline w-full">Clear Filters</a>
                 </form>
             </aside>
+
+            <!-- For the jobs we are displaying -->
 
             <main>
                 <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
@@ -173,7 +184,11 @@ while ($row = $savedResult->fetch_assoc()) {
                                             <span>💰 <?php echo number_format($job['Base_Salary'], 0); ?></span>
                                             <span>🏢 <?php echo htmlspecialchars($job['Work_Model']); ?></span>
                                             <span>⏰ <?php echo htmlspecialchars($job['Employment_Type']); ?></span>
-                                            <span>📅 Deadline: <?php echo htmlspecialchars($job['Deadline']); ?></span>
+                                            <span>📅 Deadline: <?php echo htmlspecialchars($job['Deadline']); ?>
+                                                <span class="text-xs <?php echo $job['expiring_soon'] ? 'text-error font-bold' : 'text-slate-400'; ?>">
+                                                    (<?php echo $job['hours_left']; ?>h left)
+                                                </span>
+                                            </span>
                                         </div>
                                         <div class="mt-3 flex flex-wrap gap-2 items-center text-sm">
                                             <?php if ($job['match_count'] > 0): ?>
@@ -189,24 +204,25 @@ while ($row = $savedResult->fetch_assoc()) {
                                     <!-- Job-details button -->
                                     <div class="flex flex-col gap-3 lg:items-end">
                                         <a href="/Jobportal/applicant/job_details.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-secondary">View Details</a>
-                                        <?php $canApply = ($job['match_count'] > 0 && ($job['total_mandatory'] == 0 || $job['matched_mandatory'] == $job['total_mandatory'])); ?>
+                                        <!-- the Apply button or save button -->
+                                    <?php $canApply = ($job['total_mandatory'] == 0 || $job['matched_mandatory'] == $job['total_mandatory']); ?>
+                                    <!-- already applied -->
                                         <?php if (in_array($job['Job_ID'], $appliedJobs)): ?>
                                             <span class="badge badge-success">Applied</span>
                                             <?php if (in_array($job['Job_ID'], $savedJobs)): ?>
                                                 <button type="button" class="btn btn-outline btn-error" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Remove</button>
                                             <?php endif; ?>
                                         <?php else: ?>
+                                            <!-- if can apply button is not pressed yet -->
                                             <?php if ($canApply): ?>
                                                 <button type="button" class="btn btn-primary" onclick="applyJob(<?php echo $job['Job_ID']; ?>)">Apply</button>
-                                                <?php if (in_array($job['Job_ID'], $savedJobs)): ?>
-                                                    <button type="button" class="btn btn-outline btn-error" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Remove</button>
-                                                <?php endif; ?>
                                             <?php else: ?>
                                                 <?php if ($job['match_count'] == 0): ?>
                                                     <span class="badge badge-warning">No matching skills</span>
                                                 <?php else: ?>
                                                     <span class="badge badge-warning">Mandatory skills missing</span>
                                                 <?php endif; ?>
+                                                <!-- if the job is saved or not -->
                                                 <?php if (in_array($job['Job_ID'], $savedJobs)): ?>
                                                     <button type="button" class="btn btn-outline btn-error" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Unsave</button>
                                                     <a href="/Jobportal/applicant/skill_gap.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-secondary">Skill Gap</a>

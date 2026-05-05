@@ -2,7 +2,7 @@
 session_start();
 include '../Database.php';
 
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? null;
 if (!$userId) {
     header('Location: ../index.html');
     exit();

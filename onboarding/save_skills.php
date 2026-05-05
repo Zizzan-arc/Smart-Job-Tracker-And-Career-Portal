@@ -45,7 +45,7 @@ if ($otherSkill !== '') {
         $otherSkillId = $row['Skill_ID'];
     } 
     else {
-        $conn->query("INSERT INTO Skill (Skill_Name, Trend_Score, BaseValue) VALUES ('$otherSanitized', 1, 1)");
+        $conn->query("INSERT INTO Skill (Skill_Name) VALUES ('$otherSanitized')");
         $otherSkillId = $conn->insert_id;
     }
 

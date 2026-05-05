@@ -46,7 +46,7 @@ if ($result->num_rows > 0) {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="../style.css?v=1.1" />
 </head>
 
 <body class="gradient-bg min-h-screen font-sans flex items-center justify-center p-4 relative overflow-y-auto">
@@ -70,9 +70,8 @@ if ($result->num_rows > 0) {
                     <?php foreach ($skillsarray as $skill): ?>
                     <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-700/60 transition-colors duration-200">
                         <!-- in input tag, the value thing returns the ID to the system -->
-                        <input type="checkbox" name="selected_skills[]" value="
-                          <?php echo $skill['Skill_ID']; ?>" 
-                            class="checkbox checkbox-sm checkbox-primary border-slate-600" />
+                        <input type="checkbox" name="selected_skills[]" value="<?php echo $skill['Skill_ID']; ?>" 
+                            class="checkbox checkbox-sm checkbox-primary" />
                         <span class="text-slate-300 font-medium text-sm"><?php echo htmlspecialchars($skill['Skill_name']); ?></span>
                     </label>
                     <?php endforeach; ?>

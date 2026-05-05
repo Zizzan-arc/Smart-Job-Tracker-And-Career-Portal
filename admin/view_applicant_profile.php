@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/auth.php';
 include '../Database.php';
 
 $userId = intval($_GET['user_id'] ?? 0);

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/auth.php';
 include '../Database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -41,7 +42,7 @@ if ($otherSkill !== '') {
     if ($existingSkill && $existingSkill->num_rows > 0) {
         $otherSkillId = intval($existingSkill->fetch_assoc()['Skill_ID']);
     } else {
-        $conn->query("INSERT INTO skill (Skill_Name, Trend_Score, BaseValue) VALUES ('$otherSanitized', 1, 1)");
+        $conn->query("INSERT INTO skill (Skill_Name) VALUES ('$otherSanitized')");
         $otherSkillId = $conn->insert_id ? intval($conn->insert_id) : 0;
     }
     if ($otherSkillId > 0) {

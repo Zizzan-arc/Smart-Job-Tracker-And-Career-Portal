@@ -1,13 +1,12 @@
-// review.js - Handle company review submission
-
-document.getElementById('reviewForm').addEventListener('submit', function(e) {
+document.getElementById('reviewForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
+    // grabs all the inputs inside the form and packs them
     const formData = new FormData(this);
     const rating = formData.get('rating');
     const reviewText = formData.get('review_text');
     const isAnonymous = document.getElementById('is_anonymous').checked ? 1 : 0;
-    
+
     formData.set('is_anonymous', isAnonymous);
 
     if (!rating) {
@@ -29,17 +28,13 @@ document.getElementById('reviewForm').addEventListener('submit', function(e) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(response => response.text()) // Get simple text back instead of JSON
+    .then(message => {
+        if (message.trim() === 'Success') {
             alert('Review submitted successfully!');
-            location.reload(); // Refresh to show the new review
+            location.reload(); 
         } else {
-            alert('Error submitting review: ' + data.message);
+            alert(message); // Show the message (or error) from PHP
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while submitting the review.');
     });
 });

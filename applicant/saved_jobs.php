@@ -2,7 +2,7 @@
 session_start();
 include '../Database.php';
 
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? null;
 if (!$userId) {
     header('Location: ../index.html');
     exit();
@@ -92,7 +92,11 @@ function getMissingSkills($conn, $userId, $jobId) {
                                     <span>💰 <?php echo number_format($job['Base_Salary'], 0); ?></span>
                                     <span>🏢 <?php echo htmlspecialchars($job['Work_Model']); ?></span>
                                     <span>⏰ <?php echo htmlspecialchars($job['Employment_Type']); ?></span>
-                                    <span>📅 Deadline: <?php echo htmlspecialchars($job['Deadline']); ?></span>
+                                    <span>📅 Deadline: <?php echo htmlspecialchars($job['Deadline']); ?>
+                                        <span class="text-xs <?php echo $job['expiring_soon'] ? 'text-error font-bold' : 'text-slate-400'; ?>">
+                                            (<?php echo $job['hours_left']; ?>h left)
+                                        </span>
+                                    </span>
                                 </div>
                                 <?php if ($job['expiring_soon']): ?>
                                     <div class="mt-3 text-sm text-red-700 font-semibold">Deadline within 48 hours</div>

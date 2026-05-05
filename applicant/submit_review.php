@@ -1,60 +1,49 @@
 <?php
 // submit_review.php - Handle company review submission
 session_start();
-require_once '../Database.php';
+include '../Database.php';
 
-header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-    exit;
-}
-
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? $_SESSION['UserID'] ?? 0;
+// 1. Get the data from the form
+$userId = $_SESSION['user_id'] ?? 0;
 $companyId = intval($_POST['company_id'] ?? 0);
 $rating = intval($_POST['rating'] ?? 0);
 $reviewText = trim($_POST['review_text'] ?? '');
-$isAnonymous = intval($_POST['is_anonymous'] ?? 0);
+$isAnonymous = isset($_POST['is_anonymous']) ? 1 : 0;
 
+// 2. Security Check: Is the user logged in?
 if ($userId <= 0) {
-    echo json_encode(['success' => false, 'message' => 'User not logged in']);
+    echo "User not logged in";
     exit;
 }
 
+// 3. Validation: Is the data correct?
 if ($companyId <= 0 || $rating < 1 || $rating > 5 || empty($reviewText)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid input data']);
+    echo "Please fill all fields correctly.";
     exit;
 }
 
-// Basic sanitization
-$reviewText = htmlspecialchars($reviewText, ENT_QUOTES, 'UTF-8');
+// 4. Sanitize the text (prevents breaking the database query)
+$safeReview = $conn->real_escape_string($reviewText);
 
-try {
-    // Check if user already reviewed this company (composite primary key check)
-    $checkStmt = $conn->prepare("SELECT UserID FROM leave_review WHERE UserID = ? AND Company_ID = ?");
-    $checkStmt->bind_param("ii", $userId, $companyId);
-    $checkStmt->execute();
-    $checkResult = $checkStmt->get_result();
-    
-    if ($checkResult->num_rows > 0) {
-        // Update existing review
-        $stmt = $conn->prepare("UPDATE leave_review SET Rating = ?, Feedback = ?, Is_Anonymous = ?, Date_Submitted = NOW() WHERE UserID = ? AND Company_ID = ?");
-        $stmt->bind_param("isiii", $rating, $reviewText, $isAnonymous, $userId, $companyId);
-    } else {
-        // Insert new review
-        $stmt = $conn->prepare("INSERT INTO leave_review (UserID, Company_ID, Rating, Feedback, Is_Anonymous, Date_Submitted) VALUES (?, ?, ?, ?, ?, NOW())");
-        $stmt->bind_param("iisii", $userId, $companyId, $rating, $reviewText, $isAnonymous);
-    }
-    $checkStmt->close();
+// 5. Check if the user has already reviewed this company
+$checkQuery = "SELECT * FROM leave_review WHERE UserID = $userId AND Company_ID = $companyId";
+$checkResult = $conn->query($checkQuery);
 
-    if ($stmt->execute()) {
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to save review: ' . $stmt->error]);
-    }
+if ($checkResult->num_rows > 0) {
+    // If they already reviewed, UPDATE the old one
+    $sql = "UPDATE leave_review 
+            SET Rating = $rating, Feedback = '$safeReview', Is_Anonymous = $isAnonymous, Date_Submitted = NOW() 
+            WHERE UserID = $userId AND Company_ID = $companyId";
+} else {
+    // If it's a new review, INSERT it
+    $sql = "INSERT INTO leave_review (UserID, Company_ID, Rating, Feedback, Is_Anonymous, Date_Submitted) 
+            VALUES ($userId, $companyId, $rating, '$safeReview', $isAnonymous, NOW())";
+}
 
-    $stmt->close();
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+// 6. Execute the query and send result back to JavaScript
+if ($conn->query($sql)) {
+    echo "Success";
+} else {
+    echo "Database error: " . $conn->error;
 }
 ?>

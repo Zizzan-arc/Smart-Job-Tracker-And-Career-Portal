@@ -2,92 +2,64 @@
 session_start();
 include '../Database.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: register.html');
-    exit();
-}
-
-$firstName = trim($_POST['first_name'] ?? '');
-$lastName = trim($_POST['last_name'] ?? '');
-$email = trim($_POST['email'] ?? '');
+// 1. Get the data from the form
+$firstName = $_POST['firstName'] ?? '';
+$lastName = $_POST['lastName'] ?? '';
+$email = $_POST['email'] ?? '';
 $password = $_POST['password'] ?? '';
-$confirmPassword = $_POST['confirm_password'] ?? '';
-$selectedRole = trim($_POST['role'] ?? 'Applicant');
-$allowedRoles = ['Applicant', 'Admin'];
-if (!in_array($selectedRole, $allowedRoles, true)) {
-    $selectedRole = 'Applicant';
-}
-$githubUrl = trim($_POST['github_url'] ?? '');
-$experienceYears = intval($_POST['experience_years'] ?? 0);
+$confirmPassword = $_POST['confirmPassword'] ?? '';
+$selectedRole = $_POST['role'] ?? 'Applicant';
+$experienceYears = intval($_POST['experienceYears'] ?? 0);
+$githubUrl = $_POST['githubUrl'] ?? '';
 
-$errors = [];
-if (empty($firstName)) $errors[] = 'First name is required';
-if (empty($lastName)) $errors[] = 'Last name is required';
-if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required';
-if (strlen($password) < 6) $errors[] = 'Password must be at least 6 characters';
-if ($password !== $confirmPassword) $errors[] = 'Passwords do not match';
-if ($experienceYears < 0) $errors[] = 'Experience years must be non-negative';
-
-if (!empty($errors)) {
-    $_SESSION['register_errors'] = $errors;
+// 2. Simple Validation (Checks if everything is filled out)
+if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
+    $_SESSION['register_errors'] = ['All fields are required.'];
     header('Location: register.html');
     exit();
 }
 
-$stmt = $conn->prepare("SELECT UserID FROM User WHERE Email = ?");
-$stmt->bind_param("s", $email);
-$stmt->execute();
-$result = $stmt->get_result();
+if ($password !== $confirmPassword) {
+    $_SESSION['register_errors'] = ['Passwords do not match.'];
+    header('Location: register.html');
+    exit();
+}
+
+// 3. Clean the data (Beginner safety)
+$safeEmail = $conn->real_escape_string($email);
+$safeFName = $conn->real_escape_string($firstName);
+$safeLName = $conn->real_escape_string($lastName);
+$safePass = $conn->real_escape_string($password);
+$safeGithub = $conn->real_escape_string($githubUrl);
+
+// 4. Check if the Email is already taken
+$checkQuery = "SELECT * FROM User WHERE Email = '$safeEmail'";
+$result = $conn->query($checkQuery);
+
 if ($result->num_rows > 0) {
-    $_SESSION['register_errors'] = ['Email already registered'];
-    $stmt->close();
+    $_SESSION['register_errors'] = ['This email is already registered.'];
     header('Location: register.html');
     exit();
 }
-$stmt->close();
 
-$roleColumnResult = $conn->query("SHOW COLUMNS FROM User LIKE 'Role'");
-$hasRoleColumn = $roleColumnResult && $roleColumnResult->num_rows > 0;
+// 5. Insert into User table
+$userSql = "INSERT INTO User (First_Name, Last_Name, Email, Password, Role) 
+            VALUES ('$safeFName', '$safeLName', '$safeEmail', '$safePass', '$selectedRole')";
 
-if ($hasRoleColumn) {
-    $userStmt = $conn->prepare("INSERT INTO User (First_Name, Last_Name, Email, Password, Role) VALUES (?, ?, ?, ?, ?)");
-    $userStmt->bind_param("sssss", $firstName, $lastName, $email, $password, $selectedRole);
-} else {
-    $userStmt = $conn->prepare("INSERT INTO User (First_Name, Last_Name, Email, Password) VALUES (?, ?, ?, ?)");
-    $userStmt->bind_param("ssss", $firstName, $lastName, $email, $password);
-}
+if ($conn->query($userSql)) {
+    $userId = $conn->insert_id;
 
-if (!$userStmt->execute()) {
-    $_SESSION['register_errors'] = ['Registration failed: ' . $userStmt->error];
-    $userStmt->close();
-    header('Location: register.html');
-    exit();
-}
-$userId = $conn->insert_id;
-$userStmt->close();
-
-if ($selectedRole === 'Applicant') {
-    $applicantStmt = $conn->prepare("INSERT INTO Applicant (UserID, GitHub_URL, Experience_Years, Referral_Points) VALUES (?, ?, ?, 0)");
-    $applicantStmt->bind_param("isi", $userId, $githubUrl, $experienceYears);
-    if (!$applicantStmt->execute()) {
-        $conn->query("DELETE FROM User WHERE UserID = $userId");
-        $_SESSION['register_errors'] = ['Registration failed: ' . $applicantStmt->error];
-        $applicantStmt->close();
-        header('Location: register.html');
-        exit();
+    // 6. If they are an Applicant, also add to the Applicant table
+    if ($selectedRole === 'Applicant') {
+        $applicantSql = "INSERT INTO Applicant (UserID, GitHub_URL, Experience_Years, Referral_Points) 
+                         VALUES ($userId, '$safeGithub', $experienceYears, 0)";
+        $conn->query($applicantSql);
     }
-    $applicantStmt->close();
+
+    // Success! Redirect to login
+    header('Location: ../index.html?registered=success');
+} else {
+    $_SESSION['register_errors'] = ['Database error: ' . $conn->error];
+    header('Location: register.html');
 }
-
-$_SESSION['user_id'] = $userId;
-$_SESSION['current_user_id'] = $userId;
-$_SESSION['role'] = $selectedRole;
-
-if ($selectedRole === 'Admin') {
-    header('Location: ../admin/index.php');
-    exit();
-}
-
-header('Location: ../onboarding/skills.php');
-exit();
 ?>

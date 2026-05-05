@@ -3,7 +3,7 @@ session_start();
 include '../Database.php';
 
 //  user ID
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? null;
 
 // these checks are for mild security purposes. 
 if (!$userId) {

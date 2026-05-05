@@ -3,7 +3,7 @@ session_start();
 include '../Database.php';
 
 // Get current logged-in user ID
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? null;
 
 if (!$userId) {
     header('Location: /Jobportal/index.html');

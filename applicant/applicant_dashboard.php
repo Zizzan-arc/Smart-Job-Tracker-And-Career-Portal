@@ -3,24 +3,23 @@ session_start();
 include '../Database.php';
 
 // 1. AUTHENTICATION & SESSION
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? null;
+$userId = $_SESSION['user_id'] ?? null;
 if (!$userId) {
     header('Location: ../index.html');
     exit();
 }
 
-// 2. FETCH APPLICANT BASIC INFO
+
 $applicantResult = $conn->query("SELECT u.First_Name, u.Last_Name, a.Experience_Years, a.Referral_Points FROM User u JOIN Applicant a ON u.UserID = a.UserID WHERE u.UserID = $userId");
 $applicant = $applicantResult->fetch_assoc();
 
-// 3. FETCH APPLICANT SKILLS
+// fetching skills
 $skillsResult = $conn->query("SELECT s.Skill_ID, s.Skill_name FROM Has_Skill h JOIN Skill s ON h.Skill_ID = s.Skill_ID WHERE h.UserID = $userId");
 $applicantSkills = [];
 while ($skill = $skillsResult->fetch_assoc()) {
     $applicantSkills[] = $skill;
 }
-
-// 4. PREPARE TRACKING ARRAYS (Already Applied / Already Saved)
+//   (Already Applied / Already Saved)
 $appliedJobs = [];
 $savedJobIds = [];
 $appliedResult = $conn->query("SELECT Job_ID FROM appliesto WHERE UserID = $userId");
@@ -32,7 +31,7 @@ while ($row = $savedResult->fetch_assoc()) {
     $savedJobIds[] = $row['Job_ID'];
 }
 
-// 5. FETCH RECOMMENDED JOBS (Based on skill match)
+// Recommended jobs section
 $recommendedJobs = [];
 if (!empty($applicantSkills)) {
     $recResult = $conn->query(
@@ -47,6 +46,7 @@ if (!empty($applicantSkills)) {
          LEFT JOIN Has_Skill hs ON rs.Skill_ID = hs.Skill_ID AND hs.UserID = $userId
          LEFT JOIN Company c ON j.Company_ID = c.Company_ID
          GROUP BY j.Job_ID, j.Job_title, c.Company_name, j.Base_salary, j.Deadline, j.Employment_Type
+        -- at least one skill 
          HAVING COUNT(DISTINCT hs.Skill_ID) > 0
          ORDER BY match_count DESC, j.Deadline ASC
          LIMIT 5"
@@ -56,7 +56,7 @@ if (!empty($applicantSkills)) {
     }
 }
 
-// 6. FETCH SAVED JOBS (Skill Gap Analysis)
+// SAVED JOBS(Skill Gap Analysis)
 $savedJobsQuery = "
     SELECT j.Job_ID, j.Job_title, c.Company_name, j.Base_salary, j.Deadline, j.Employment_Type, j.Work_Model,
            TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) AS hours_left,
@@ -79,7 +79,7 @@ while ($job = $savedJobsResult->fetch_assoc()) {
     $savedJobs[] = $job;
 }
 
-// 7. FETCH TRENDING JOBS
+//  TRENDING JOBS
 $trendingResult = $conn->query(
     "SELECT j.Job_ID,
             j.Job_title,
@@ -101,9 +101,27 @@ while ($job = $trendingResult->fetch_assoc()) {
     $trendingJobs[] = $job;
 }
 
-// 8. FETCH APPLICATION STATUS
+// 8. FETCH DEADLINE REMINDERS (Saved jobs expiring within 48 hours)
+$deadlineReminders = [];
+$reminderQuery = "
+    SELECT j.Job_ID, j.Job_title, c.Company_name, j.Deadline,
+           TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) AS hours_left
+    FROM Wishlist w
+    JOIN JobPost j ON w.Job_ID = j.Job_ID
+    LEFT JOIN Company c ON j.Company_ID = c.Company_ID
+    WHERE w.UserID = $userId 
+    AND TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) BETWEEN 0 AND 48
+    ORDER BY j.Deadline ASC
+";
+$reminderResult = $conn->query($reminderQuery);
+while ($reminder = $reminderResult->fetch_assoc()) {
+    $deadlineReminders[] = $reminder;
+}
+
+// 9. FETCH APPLICATION STATUS
 $statusResult = $conn->query(
     "SELECT a.Job_ID, a.Status, a.Application_date, j.Job_title, c.Company_name, j.Deadline,
+            TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) AS hours_left,
             (TIMESTAMPDIFF(HOUR, NOW(), j.Deadline) BETWEEN 0 AND 48) AS expiring_soon
      FROM appliesto a
      JOIN JobPost j ON a.Job_ID = j.Job_ID
@@ -147,6 +165,33 @@ while ($app = $statusResult->fetch_assoc()) {
             </div>
         </div>
 
+        <!-- Deadline Reminders Alert -->
+        <?php if (!empty($deadlineReminders)): ?>
+        <div class="alert alert-warning shadow-lg mb-8 bg-orange-50 border-l-4 border-orange-500">
+            <div class="flex items-start gap-4">
+                <span class="text-2xl">⏰</span>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-orange-900">Application Deadlines Coming Up!</h3>
+                    <p class="text-sm text-orange-800 mt-1">You have <?php echo count($deadlineReminders); ?> saved job(s) with deadline(s) in the next 48 hours:</p>
+                    <div class="mt-3 space-y-2">
+                        <?php foreach ($deadlineReminders as $reminder): ?>
+                            <div class="flex justify-between items-center bg-white p-2 rounded border border-orange-200">
+                                <div>
+                                    <p class="font-medium text-orange-900"><?php echo htmlspecialchars($reminder['Job_title']); ?></p>
+                                    <p class="text-xs text-orange-700"><?php echo htmlspecialchars($reminder['Company_name'] ?: 'Company'); ?> • Deadline: <?php echo htmlspecialchars($reminder['Deadline']); ?></p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="badge badge-error"><?php echo intval($reminder['hours_left']); ?> hrs left</span>
+                                    <a href="/Jobportal/applicant/job_details.php?job_id=<?php echo $reminder['Job_ID']; ?>" class="btn btn-xs btn-primary">Apply</a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Your Skills -->
         <?php if (!empty($applicantSkills)): ?>
         <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
@@ -173,7 +218,7 @@ while ($app = $statusResult->fetch_assoc()) {
                                         <p class="text-slate-600"><?php echo htmlspecialchars($job['Company_name'] ?: 'Company'); ?></p>
                                         <div class="flex gap-4 text-sm text-slate-600 mt-2">
                                             <span>💰 <?php echo number_format($job['Base_salary'], 0); ?></span>
-                                            <span>📅 <?php echo htmlspecialchars($job['Deadline']); ?></span>
+                                            <span>📅 <?php echo htmlspecialchars($job['Deadline']); ?> <span class="text-xs <?php echo $job['expiring_soon'] ? 'text-error font-bold' : 'text-slate-400'; ?>">(<?php echo $job['hours_left']; ?>h left)</span></span>
                                             <span><?php echo htmlspecialchars($job['Employment_Type']); ?></span>
                                             <?php if ($job['expiring_soon']): ?>
                                                 <span class="badge badge-error">Expiring Soon</span>
@@ -227,7 +272,7 @@ while ($app = $statusResult->fetch_assoc()) {
                                         <p class="text-slate-600"><?php echo htmlspecialchars($job['Company_name'] ?: 'Company'); ?></p>
                                         <div class="flex gap-4 text-sm text-slate-600 mt-2">
                                             <span>💰 <?php echo number_format($job['Base_salary'], 0); ?></span>
-                                            <span>📅 <?php echo htmlspecialchars($job['Deadline']); ?></span>
+                                            <span>📅 <?php echo htmlspecialchars($job['Deadline']); ?> <span class="text-xs <?php echo $job['expiring_soon'] ? 'text-error font-bold' : 'text-slate-400'; ?>">(<?php echo $job['hours_left']; ?>h left)</span></span>
                                             <span><?php echo htmlspecialchars($job['Employment_Type']); ?></span>
                                             <?php if ($job['expiring_soon']): ?>
                                                 <span class="badge badge-error">Expiring Soon</span>
@@ -273,7 +318,11 @@ while ($app = $statusResult->fetch_assoc()) {
                                         <p class="text-slate-600"><?php echo htmlspecialchars($job['Company_name'] ?: 'Company'); ?></p>
                                         <div class="flex gap-4 text-sm text-slate-600 mt-2">
                                             <span>💰 <?php echo number_format($job['Base_salary'], 0); ?></span>
-                                            <span>📅 <?php echo htmlspecialchars($job['Deadline']); ?></span>
+                                            <span>📅 <?php echo htmlspecialchars($job['Deadline']); ?> 
+                                                <span class="text-xs <?php echo $job['expiring_soon'] ? 'text-error font-bold' : 'text-slate-400'; ?>">
+                                                    (<?php echo $job['hours_left']; ?>h left)
+                                                </span>
+                                            </span>
                                             <span>🔥 <?php echo $job['app_count']; ?> applications</span>
                                             <?php if ($job['expiring_soon']): ?>
                                                 <span class="badge badge-error">Expiring Soon</span>
@@ -317,7 +366,7 @@ while ($app = $statusResult->fetch_assoc()) {
                                             <?php echo htmlspecialchars($app['Status']); ?>
                                         </span>
                                         <?php if ($app['expiring_soon']): ?>
-                                            <span class="badge badge-error ml-2">Expiring Soon</span>
+                                            <span class="badge badge-error ml-2">Expiring Soon (<?php echo $app['hours_left']; ?>h)</span>
                                         <?php endif; ?>
                                     </td>
                                     <td><?php echo htmlspecialchars($app['Application_date']); ?></td>

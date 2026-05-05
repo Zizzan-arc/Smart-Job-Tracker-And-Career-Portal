@@ -1,55 +1,54 @@
+// Simple function to apply for a job
 function applyJob(jobId, referrerId = null) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/Jobportal/applicant/apply_job.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    
-    xhr.onload = function() {
-        if (xhr.status === 200) {
+    let data = "job_id=" + jobId;
+    if (referrerId) {
+        data += "&referrer=" + referrerId;
+    }
+
+    fetch('/Jobportal/applicant/apply_job.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: data
+    })
+    .then(response => {
+        if (response.ok) {
             alert('Application submitted successfully!');
             location.reload();
         } else {
-            alert('Error submitting application. Please try again.');
+            alert('Error submitting application.');
         }
-    };
-    
-    let body = 'job_id=' + jobId;
-    if (referrerId) {
-        body += '&referrer=' + encodeURIComponent(referrerId);
-    }
-    xhr.send(body);
+    });
 }
 
+// Simple function to save or unsave a job
 function saveJob(jobId) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/Jobportal/applicant/save_job.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    
-    xhr.onload = function() {
-        if (xhr.status === 200) {
+    fetch('/Jobportal/applicant/save_job.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: "job_id=" + jobId + "&action=save"
+    })
+    .then(response => {
+        if (response.ok) {
             alert('Job saved successfully!');
             location.reload();
         } else {
-            const message = xhr.responseText ? xhr.responseText : 'Error saving job. Please try again.';
-            alert(message);
+            alert('Error saving job.');
         }
-    };
-    
-    xhr.send('job_id=' + jobId + '&action=save');
+    });
 }
 
 function unsaveJob(jobId) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/Jobportal/applicant/save_job.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    
-    xhr.onload = function() {
-        if (xhr.status === 200) {
+    fetch('/Jobportal/applicant/save_job.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: "job_id=" + jobId + "&action=unsave"
+    })
+    .then(response => {
+        if (response.ok) {
             alert('Job removed from saved list!');
             location.reload();
         } else {
-            alert('Error removing job. Please try again.');
+            alert('Error removing job.');
         }
-    };
-    
-    xhr.send('job_id=' + jobId + '&action=unsave');
+    });
 }

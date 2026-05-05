@@ -2,7 +2,7 @@
 session_start();
 include '../Database.php';
 
-$userId = $_SESSION['user_id'] ?? $_SESSION['current_user_id'] ?? $_SESSION['UserID'] ?? null;
+$userId = $_SESSION['user_id'] ?? null;
 if (!$userId) {
     header('Location: ../index.html');
     exit();
@@ -78,7 +78,7 @@ $mandatoryResult = $conn->query(
 $mandatoryData = $mandatoryResult ? $mandatoryResult->fetch_assoc() : ['total_mandatory' => 0, 'matched_mandatory' => 0];
 $totalMandatory = intval($mandatoryData['total_mandatory']);
 $matchedMandatory = intval($mandatoryData['matched_mandatory']);
-$canApply = ($matchCount > 0 && ($totalMandatory === 0 || $matchedMandatory === $totalMandatory));
+$canApply = ($totalMandatory === 0 || $matchedMandatory === $totalMandatory);
 
 // Fetch company reviews
 $companyId = $job['Company_ID'];
@@ -157,7 +157,7 @@ if ($totalReviews > 0) {
                             <h3 class="font-semibold">Referral Link</h3>
                             <p class="text-sm text-slate-600 mb-3">Share this link with another applicant. If they apply through it, you earn referral points.</p>
                             <div class="flex gap-2 flex-col sm:flex-row">
-                                <input id="referralLink" readonly class="input input-bordered w-full" value="/Jobportal/applicant/job_details.php?job_id=<?php echo $jobId; ?>&referrer=<?php echo $userId; ?>">
+                                <input id="referralLink" readonly class="input input-bordered w-full" value="http://localhost/Jobportal/applicant/job_details.php?job_id=<?php echo $jobId; ?>&referrer=<?php echo $userId; ?>">
                                 <button id="copyReferralLink" type="button" class="btn btn-primary">Copy Link</button>
                             </div>
                         </div>
@@ -260,20 +260,12 @@ if ($totalReviews > 0) {
                         <div class="alert alert-success">
                             <span>You have already applied to this job.</span>
                         </div>
-                    <?php else: ?>
-                        <?php if ($canApply): ?>
-                            <button type="button" class="btn btn-primary w-full" onclick="applyJob(<?php echo $jobId; ?><?php echo $referrerId ? ', ' . $referrerId : ''; ?>)">Apply Now</button>
-                        <?php else: ?>
-                            <div class="alert alert-warning">
-                                <span>You are missing mandatory skills for this job. Save it and use Skill Gap Analysis.</span>
-                            </div>
-                        <?php endif; ?>
-                    <?php endif; ?>
-                    <?php if ($hasApplied): ?>
-                        <!-- already applied: no save or skill gap actions -->
                     <?php elseif ($canApply): ?>
                         <button type="button" class="btn btn-primary w-full" onclick="applyJob(<?php echo $jobId; ?><?php echo $referrerId ? ', ' . $referrerId : ''; ?>)">Apply Now</button>
                     <?php else: ?>
+                        <div class="alert alert-warning">
+                            <span>You are missing mandatory skills for this job. Save it and use Skill Gap Analysis.</span>
+                        </div>
                         <?php if ($hasSaved): ?>
                             <button type="button" class="btn btn-outline btn-error w-full" onclick="unsaveJob(<?php echo $jobId; ?>)">Remove from Saved</button>
                             <a href="/Jobportal/applicant/skill_gap.php?job_id=<?php echo $jobId; ?>" class="btn btn-secondary w-full">Skill Gap Analysis</a>

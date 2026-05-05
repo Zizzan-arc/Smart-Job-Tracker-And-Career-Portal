@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/auth.php';
 include '../Database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
