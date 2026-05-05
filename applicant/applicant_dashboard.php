@@ -141,6 +141,7 @@ while ($app = $statusResult->fetch_assoc()) {
             <div class="flex gap-3">
                 <a href="/Jobportal/applicant/browse_jobs.php" class="btn btn-primary">Browse Jobs</a>
                 <a href="/Jobportal/applicant/saved_jobs.php" class="btn btn-secondary">Saved Jobs</a>
+                <a href="/Jobportal/applicant/cv_workspace.php" class="btn btn-secondary">CV Workspace</a>
                 <a href="/Jobportal/applicant/applied_jobs.php" class="btn btn-outline btn-accent">Applied Jobs</a>
                 <a href="/Jobportal/logout.php" class="btn btn-outline btn-error">Logout</a>
             </div>

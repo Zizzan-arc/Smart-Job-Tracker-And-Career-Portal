@@ -10,12 +10,12 @@ if ($jobId > 0) {
     if ($jobResult && $jobResult->num_rows) {
         $jobTitle = 'Applicants for ' . $jobResult->fetch_assoc()['Job_title'];
     }
-    $sql = "SELECT app.Job_ID, app.Application_date, app.Status, u.UserID, u.Email, ap.GitHub_URL, ap.Experience_Years
+    $sql = "SELECT app.Job_ID, app.Application_date, app.Status, u.UserID, u.Email, ap.GitHub_URL, ap.Experience_Years, COALESCE(ap.Referral_Points, 0) AS Referral_Points
             FROM appliesto app
             JOIN User u ON app.UserID = u.UserID
             LEFT JOIN Applicant ap ON u.UserID = ap.UserID
             WHERE app.Job_ID = $jobId
-            ORDER BY app.Application_date DESC";
+            ORDER BY COALESCE(ap.Referral_Points, 0) DESC, app.Application_date DESC";
     $applicants = $conn->query($sql);
 } else {
     $sql = "SELECT app.Job_ID, app.Application_date, app.Status, u.UserID, u.Email, ap.GitHub_URL, ap.Experience_Years, j.Job_title
@@ -23,7 +23,7 @@ if ($jobId > 0) {
             JOIN User u ON app.UserID = u.UserID
             LEFT JOIN Applicant ap ON u.UserID = ap.UserID
             LEFT JOIN JobPost j ON app.Job_ID = j.Job_ID
-            ORDER BY app.Application_date DESC";
+            ORDER BY COALESCE(ap.Referral_Points, 0) DESC, app.Application_date DESC";
     $applicants = $conn->query($sql);
 }
 ?>
@@ -57,6 +57,7 @@ if ($jobId > 0) {
                         <th>Email</th>
                         <th>GitHub</th>
                         <th>Experience</th>
+                        <th>Referral Points</th>
                         <th>Application Date</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -73,6 +74,7 @@ if ($jobId > 0) {
                                 <td><?php echo htmlspecialchars($app['Email']); ?></td>
                                 <td><?php echo htmlspecialchars($app['GitHub_URL'] ?: 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($app['Experience_Years'] ?? '0'); ?></td>
+                                <td><?php echo htmlspecialchars($app['Referral_Points'] ?? '0'); ?></td>
                                 <td><?php echo htmlspecialchars($app['Application_date'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($app['Status'] ?? 'Pending'); ?></td>
                                 <td>
@@ -93,7 +95,7 @@ if ($jobId > 0) {
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="<?php echo $jobId === 0 ? '7' : '6'; ?>" class="text-center py-8">No applications found.</td>
+                            <td colspan="<?php echo $jobId === 0 ? '9' : '8'; ?>" class="text-center py-8">No applications found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

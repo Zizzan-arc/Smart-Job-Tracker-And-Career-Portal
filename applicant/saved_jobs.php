@@ -68,6 +68,7 @@ function getMissingSkills($conn, $userId, $jobId) {
             <div class="flex gap-3">
                 <a href="/Jobportal/applicant/applicant_dashboard.php" class="btn btn-outline">Dashboard</a>
                 <a href="/Jobportal/applicant/browse_jobs.php" class="btn btn-secondary">Browse Jobs</a>
+                <a href="/Jobportal/applicant/cv_workspace.php" class="btn btn-secondary">CV Workspace</a>
                 <a href="/Jobportal/applicant/applied_jobs.php" class="btn btn-primary">Applied Jobs</a>
                 <a href="/Jobportal/logout.php" class="btn btn-error btn-outline">Logout</a>
             </div>
@@ -78,7 +79,10 @@ function getMissingSkills($conn, $userId, $jobId) {
         <?php if (!empty($savedJobs)): ?>
             <div class="space-y-4">
                 <?php foreach ($savedJobs as $job): ?>
-                    <?php $missingSkills = getMissingSkills($conn, $userId, $job['Job_ID']); ?>
+                    <?php 
+                        $missingSkills = getMissingSkills($conn, $userId, $job['Job_ID']);
+                        $canApply = ($job['match_count'] > 0 && ($job['total_mandatory'] == 0 || $job['matched_mandatory'] == $job['total_mandatory']));
+                    ?>
                     <div class="border rounded-xl p-6 bg-white shadow-sm <?php echo $job['expiring_soon'] ? 'border-red-400 bg-red-50' : ''; ?>">
                         <div class="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start">
                             <div class="flex-1">
@@ -112,6 +116,7 @@ function getMissingSkills($conn, $userId, $jobId) {
                                     <span class="badge badge-success">Applied</span>
                                 <?php elseif ($canApply): ?>
                                     <button type="button" class="btn btn-primary" onclick="applyJob(<?php echo $job['Job_ID']; ?>)">Apply</button>
+                                    <button type="button" class="btn btn-outline btn-error" onclick="unsaveJob(<?php echo $job['Job_ID']; ?>)">Remove</button>
                                 <?php else: ?>
                                     <span class="badge badge-warning">Mandatory skills missing</span>
                                     <a href="/Jobportal/applicant/skill_gap.php?job_id=<?php echo $job['Job_ID']; ?>" class="btn btn-secondary">Skill Gap</a>

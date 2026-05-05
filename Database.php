@@ -5,7 +5,7 @@ $username = "root";
 $password = "";
 $dbname = "jobportal_db";
 
-
+// new mysqli returns an object
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection

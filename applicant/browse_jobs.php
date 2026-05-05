@@ -109,6 +109,7 @@ while ($row = $savedResult->fetch_assoc()) {
             <div class="flex gap-3">
                 <a href="/Jobportal/applicant/applicant_dashboard.php" class="btn btn-outline">Dashboard</a>
                 <a href="/Jobportal/applicant/saved_jobs.php" class="btn btn-secondary">Saved Jobs</a>
+                <a href="/Jobportal/applicant/cv_workspace.php" class="btn btn-secondary">CV Workspace</a>
                 <a href="/Jobportal/applicant/applied_jobs.php" class="btn btn-primary">Applied Jobs</a>
                 <a href="/Jobportal/logout.php" class="btn btn-error btn-outline">Logout</a>
             </div>

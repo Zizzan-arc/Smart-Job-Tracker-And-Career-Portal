@@ -1,41 +1,45 @@
 <?php
 
 session_start();
-
 include 'Database.php';
 
-// email and password submitted from the login form (index.html) 
-$email = $_POST['email'] ?? '';
+$email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 
-// Query the user table to find a matching account
-$sql = "SELECT * FROM user WHERE Email = '$email' AND Password = '$password'";
-$result = $conn->query($sql);
-
-
-if ($result->num_rows == 1) {
-
-    // converts the object into an Array
-    $user = $result->fetch_assoc();
-
-    // Store the user's ID and Role in the session
-    $_SESSION['user_id'] = $user['UserID'];
-    $_SESSION['role'] = $user['Role'];
-
-    // Redirect based on the user's role by using header function of php
-    if ($user['Role'] == 'Applicant') {
-        header("Location: /Jobportal/applicant/applicant_dashboard.php");
-        exit();
-    } elseif ($user['Role'] == 'Admin') {
-        header("Location: /Jobportal/admin/index.php");
-        exit();
-    }
-
-} else {
-    // Login failed and redirect
+if ($email === '' || $password === '') {
     echo "<script>
-        alert('Login Failed');
+        alert('Login Failed: Email and password are required.');
         window.location.href = '/Jobportal/index.html';
     </script>";
+    exit();
 }
+
+$stmt = $conn->prepare("SELECT * FROM User WHERE Email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $result->num_rows === 1) {
+    $user = $result->fetch_assoc();
+    $isPasswordValid = ($password === $user['Password']);
+
+    if ($isPasswordValid) {
+        $_SESSION['user_id'] = $user['UserID'];
+        $_SESSION['role'] = $user['Role'] ?? '';
+
+        if (($user['Role'] ?? '') === 'Applicant') {
+            header("Location: /Jobportal/applicant/applicant_dashboard.php");
+            exit();
+        } elseif (($user['Role'] ?? '') === 'Admin') {
+            header("Location: /Jobportal/admin/index.php");
+            exit();
+        }
+    }
+}
+
+echo "<script>
+    alert('Login Failed');
+    window.location.href = '/Jobportal/index.html';
+</script>";
+exit();
 ?>

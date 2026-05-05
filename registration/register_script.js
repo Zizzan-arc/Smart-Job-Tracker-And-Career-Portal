@@ -1,114 +1,119 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const registerForm = document.getElementById('registerForm');
-  const roleRadios = document.querySelectorAll('input[name="user_role"]');
+// register_script.js - Client-side validation for registration form
 
-  // Select the form-control divs for GitHub and Experience fields
-  const githubField = document.getElementById('githubSection');
-  const experienceField = document.getElementById('experienceSection');
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registerForm');
+    const registerBtn = document.getElementById('registerBtn');
 
-  const firstNameInput = document.getElementById('firstName');
-  const lastNameInput = document.getElementById('lastName');
-  const emailInput = document.getElementById('email');
-  const githubUrlInput = document.getElementById('githubUrl');
-  const experienceInput = document.getElementById('experience');
-  const passwordInput = document.getElementById('password');
-  const confirmPasswordInput = document.getElementById('confirmPassword');
-  const showPasswordCheckbox = document.getElementById('showPasswordCheckbox');
+    // Form fields
+    const firstName = document.getElementById('first_name');
+    const lastName = document.getElementById('last_name');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const experienceYears = document.getElementById('experience_years');
 
-  // --- Dynamic UI: Hide/Show fields based on Role ---
-  roleRadios.forEach(radio => {
-    radio.addEventListener('change', () => {
-      if (radio.value === 'Admin') {
-        githubField.classList.add('hidden'); // Hide GitHub for Admins
-        experienceField.classList.add('hidden'); // Hide Experience for Admins
-      } else {
-        githubField.classList.remove('hidden'); // Show for Applicants
-        experienceField.classList.remove('hidden'); // Show Experience for Applicants
-      }
+    // Error elements
+    const firstNameError = document.getElementById('firstNameError');
+    const lastNameError = document.getElementById('lastNameError');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+    const experienceError = document.getElementById('experienceError');
+
+    // Validation functions
+    function validateFirstName() {
+        if (firstName.value.trim() === '') {
+            showError(firstNameError, 'First name is required.');
+            return false;
+        }
+        hideError(firstNameError);
+        return true;
+    }
+
+    function validateLastName() {
+        if (lastName.value.trim() === '') {
+            showError(lastNameError, 'Last name is required.');
+            return false;
+        }
+        hideError(lastNameError);
+        return true;
+    }
+
+    function validateEmail() {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.value.trim())) {
+            showError(emailError, 'Please enter a valid email address.');
+            return false;
+        }
+        hideError(emailError);
+        return true;
+    }
+
+    function validatePassword() {
+        if (password.value.length < 6) {
+            showError(passwordError, 'Password must be at least 6 characters.');
+            return false;
+        }
+        hideError(passwordError);
+        return true;
+    }
+
+    function validateConfirmPassword() {
+        if (password.value !== confirmPassword.value) {
+            showError(confirmPasswordError, 'Passwords do not match.');
+            return false;
+        }
+        hideError(confirmPasswordError);
+        return true;
+    }
+
+    function validateExperience() {
+        const value = parseInt(experienceYears.value);
+        if (isNaN(value) || value < 0) {
+            showError(experienceError, 'Please enter valid experience years.');
+            return false;
+        }
+        hideError(experienceError);
+        return true;
+    }
+
+    function showError(element, message) {
+        element.textContent = message;
+        element.classList.remove('hidden');
+    }
+
+    function hideError(element) {
+        element.classList.add('hidden');
+    }
+
+    // Event listeners for real-time validation
+    firstName.addEventListener('blur', validateFirstName);
+    lastName.addEventListener('blur', validateLastName);
+    email.addEventListener('blur', validateEmail);
+    password.addEventListener('blur', validatePassword);
+    confirmPassword.addEventListener('blur', validateConfirmPassword);
+    experienceYears.addEventListener('blur', validateExperience);
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        const isValid = validateFirstName() && validateLastName() && validateEmail() &&
+                        validatePassword() && validateConfirmPassword() && validateExperience();
+
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Disable button to prevent double submission
+        registerBtn.disabled = true;
+        registerBtn.textContent = 'Creating Account...';
     });
-  });
 
-
-   // passowrd visibility
-  showPasswordCheckbox.addEventListener('change', () => {
-    if (showPasswordCheckbox.checked) {
-      passwordInput.type = 'text';
-      confirmPasswordInput.type = 'text';
-    } else {
-      // hides the password
-      passwordInput.type = 'password';
-      confirmPasswordInput.type = 'password';
+    // Check for server-side errors on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('error')) {
+        const error = urlParams.get('error');
+        // Display error (you can customize this)
+        alert('Registration failed: ' + error);
     }
-  });
-
-
-  // --- Helper Functions ---
-  const isValidEmail = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-  const isValidUrl = (val) => {
-    try {
-      new URL(val);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  // Arrow Functions for showing/hiding errors
-  const showError = (el) => el.classList.remove('hidden');
-  const hideError = (el) => el.classList.add('hidden');
-
-  // Clear errors on typing
-  [firstNameInput, lastNameInput, emailInput, githubUrlInput, experienceInput, passwordInput, confirmPasswordInput].forEach(input => {
-    input.addEventListener('input', () => {
-      const errorId = input.id + 'Error';
-      const errorEl = document.getElementById(errorId);
-      if (errorEl) hideError(errorEl);
-    });
-  });
-
-  // --- Form Validation ---
-  registerForm.addEventListener('submit', (e) => {
-    let hasError = false;
-    const selectedRole = document.querySelector('input[name="user_role"]:checked');
-
-    // Check role selection
-    if (!selectedRole) {
-      showError(document.getElementById('roleError'));
-      hasError = true;
-    } else {
-      hideError(document.getElementById('roleError'));
-    }
-
-    if (!firstNameInput.value.trim()) { showError(document.getElementById('firstNameError')); hasError = true; }
-    if (!lastNameInput.value.trim()) { showError(document.getElementById('lastNameError')); hasError = true; }
-
-    if (!isValidEmail(emailInput.value.trim())) {
-      showError(document.getElementById('emailError'));
-      hasError = true;
-    }
-
-    // Validate GitHub URL and Experience only if Applicant is selected
-    if (selectedRole && selectedRole.value === 'Applicant') {
-      if (!isValidUrl(githubUrlInput.value.trim())) {
-        showError(document.getElementById('githubUrlError'));
-        hasError = true;
-      }
-      if (!experienceInput.value.trim()) {
-        showError(document.getElementById('experienceError'));
-        hasError = true;
-      }
-    }
-
-    if (passwordInput.value.length < 6) {
-      showError(document.getElementById('passwordError'));
-      hasError = true;
-    }
-
-    if (confirmPasswordInput.value !== passwordInput.value || !confirmPasswordInput.value) {
-      showError(document.getElementById('confirmPasswordError'));
-      hasError = true;
-    }
-
-    if (hasError) e.preventDefault();
-  });
 });

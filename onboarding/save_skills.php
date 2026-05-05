@@ -55,6 +55,7 @@ if ($otherSkill !== '') {
     }
 }
 
+// Has_skill part.
 $insertedCount = 0;
 foreach ($selectedSkills as $skillId) {
     if ($skillId <= 0) {

@@ -83,6 +83,7 @@ $missingSkills = getMissingSkills($conn, $userId, $jobId);
             <div class="flex gap-3">
                 <a href="/Jobportal/applicant/browse_jobs.php" class="btn btn-outline">← Browse Jobs</a>
                 <a href="/Jobportal/applicant/applicant_dashboard.php" class="btn btn-primary">Dashboard</a>
+                <a href="/Jobportal/applicant/cv_workspace.php" class="btn btn-secondary">CV Workspace</a>
                 <a href="/Jobportal/logout.php" class="btn btn-outline btn-error">Logout</a>
             </div>
         </div>
