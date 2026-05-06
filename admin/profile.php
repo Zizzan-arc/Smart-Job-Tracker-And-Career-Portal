@@ -2,8 +2,9 @@
 require_once __DIR__ . '/auth.php';
 include '../Database.php';
 
+$adminId = $_SESSION['user_id'];
 $admin = null;
-$result = $conn->query("SELECT * FROM User WHERE Role = 'admin' LIMIT 1");
+$result = $conn->query("SELECT * FROM User WHERE UserID = $adminId LIMIT 1");
 if ($result && $result->num_rows) {
     $admin = $result->fetch_assoc();
 }

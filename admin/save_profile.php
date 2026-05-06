@@ -24,7 +24,7 @@ if ($emailResult && $emailResult->num_rows > 0) {
     exit;
 }
 
-$sql = "UPDATE User SET Email = '$email', Password = '$password' WHERE UserID = $adminId AND Role = 'admin'";
+$sql = "UPDATE User SET Email = '$email', Password = '$password' WHERE UserID = $adminId AND Role = 'Admin'";
 if ($conn->query($sql) === TRUE) {
     echo "<script>alert('Profile updated successfully.'); window.location.href = 'profile.php';</script>";
     exit;
